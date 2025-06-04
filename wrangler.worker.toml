@@ -1,0 +1,15 @@
+name = "burrito-rater"
+compatibility_date = "2023-09-01"
+compatibility_flags = ["nodejs_compat"]
+main = "api/worker.js"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "burrito-rater-db"
+database_id = "0e87da0b-9043-44f4-8782-3ee0c9fd6553" 
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "burrito-rater-bucket"
+
+# Both R2_API_TOKEN and TURNSTILE_SECRET_KEY are set as secrets in the Cloudflare dashboard

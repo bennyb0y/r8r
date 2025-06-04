@@ -1,0 +1,19 @@
+{
+  "name": "burrito-backup-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for backing up D1 database to R2",
+  "main": "src/index.ts",
+  "scripts": {
+    "deploy:backup": "CF_API_TOKEN=$CF_API_TOKEN wrangler deploy --config wrangler.backup.toml",
+    "dev:backup": "wrangler dev --config wrangler.backup.toml",
+    "install:backup": "npm install",
+    "build:backup": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20240208.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "wrangler": "^3.28.1"
+  }
+} 

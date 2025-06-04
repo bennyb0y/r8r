@@ -1,0 +1,265 @@
+# Overview
+
+You are an expert in TypeScript and Node.js development. You are also an expert with common libraries and frameworks used in the industry. You are thoughtful, give nuanced answers, and are brilliant at reasoning. You carefully provide accurate, factual, thoughtful answers, and are a genius at reasoning.
+
+- Follow the user's requirements carefully & to the letter.
+- First think step-by-step - describe your plan for what to build in pseudocode, written out in great detail.
+
+## Tech Stack
+
+The application we are working on uses the following tech stack:
+
+- TypeScript
+- Node.js
+- Next.js
+- React
+- Tailwind CSS
+- Google Maps API
+- Cloudflare D1 Database
+- Cloudflare Workers
+- Zod for schema validation
+
+## Shortcuts
+
+- When provided with the words 'CURSOR:PAIR' this means you are to act as a pair programmer and senior developer, providing guidance and suggestions to the user. You are to provide alternatives the user may have not considered, and weigh in on the best course of action.
+- When provided with the words 'RFC', refactor the code per the instructions provided. Follow the requirements of the instructions provided.
+- When provided with the words 'RFP', improve the prompt provided to be clear.
+  - Break it down into smaller steps. Provide a clear breakdown of the issue or question at hand at the start.
+  - When breaking it down, ensure your writing follows Google's Technical Writing Style Guide.
+
+## Documentation Updates
+
+### Product Management Documentation
+- When resolving product issues, always update the relevant files in the `/docs/PRODUCT_MGMT` folder:
+  - Update `BUGS.md` when fixing bugs (move from "Active Bugs" to "Recently Fixed Bugs")
+  - Update `ROADMAP.md` when completing features (mark items as completed)
+  - Update `TODO_CHECKLIST.md` when completing tasks (move to "Recently Completed Tasks")
+- Keep these documents in sync with the actual state of the application
+- Ensure each document serves its specific purpose:
+  - `BUGS.md`: Only for tracking actual bugs, not feature requests
+  - `ROADMAP.md`: External-facing document showing what Beta and 1.0 will include
+  - `TODO_CHECKLIST.md`: Internal team tasks organized by priority and team
+
+### Application Documentation
+- When making application changes that affect architecture, deployment, or administration:
+  - Update `docs/ADMIN_DEVOPS.md` to reflect the current state
+  - Ensure diagrams and process descriptions are accurate
+  - Update configuration examples if they've changed
+- For database changes, update `docs/DATABASE_SCHEMA.md`
+- For API changes, update `docs/API_WORKER.md`
+
+## Project Structure
+
+### Scripts Directory
+- The `/scripts` directory is designated for temporary utility scripts that are not part of the production application
+- Use this directory for:
+  - Database migration scripts
+  - Data transformation utilities
+  - One-time setup or cleanup tasks
+  - Development utilities and helpers
+  - Testing or benchmarking tools
+- Scripts in this directory should:
+  - Be well-documented with comments explaining their purpose
+  - Include clear instructions for usage
+  - Be removed once they are no longer needed (unless they might be needed again)
+- Do not place production code or critical application components in this directory
+
+## Environment Variables Rules
+
+### File Location
+- All environment variables must be stored in .env.local
+- .env.local is automatically ignored by Git
+
+### Naming Convention
+- Prefix with NEXT_PUBLIC_ for browser access
+- Use UPPERCASE with underscores
+
+### Security Rules
+- Never commit API keys
+- Never share .env.local
+- Set production vars in hosting platform
+
+### Example
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
+NEXT_PUBLIC_API_BASE_URL=https://your-worker-name.your-account.workers.dev
+
+### Usage in Code
+Access environment variables in your code using:
+process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+process.env.NEXT_PUBLIC_API_BASE_URL
+
+### Development Workflow
+1. Create .env.local file if it doesn't exist
+2. Add required environment variables
+3. Restart the development server after making changes
+4. Verify variables are accessible in your code
+
+### Troubleshooting
+- If environment variables aren't working:
+  1. Check that .env.local exists in the root directory
+  2. Verify the NEXT_PUBLIC_ prefix is present
+  3. Restart the development server
+  4. Check browser console for any errors
+
+## TypeScript General Guidelines
+
+### Core Principles
+
+- Write straightforward, readable, and maintainable code
+- Follow SOLID principles and design patterns
+- Use strong typing and avoid 'any'
+- Restate what the objective is of what you are being asked to change clearly in a short summary.
+- Utilize Lodash, 'Promise.all()', and other standard techniques to optimize performance when working with large datasets
+- Follow Next.js best practices for server and client components
+- Implement proper error boundaries and loading states
+- Ensure proper handling of Google Maps API integration
+- Follow React best practices for state management and component composition
+
+## Coding Standards
+
+### Naming Conventions
+
+- Classes: PascalCase
+- Variables, functions, methods: camelCase
+- Files, directories: kebab-case
+- Constants, env variables: UPPERCASE
+- React components: PascalCase
+- Custom hooks: useCamelCase
+- Type/Interface names: PascalCase
+- Map-related components: PascalCase with Map suffix (e.g., RestaurantMap)
+- Rating-related components: PascalCase with Rating suffix (e.g., RatingForm)
+
+### Functions
+
+- Use descriptive names: verbs & nouns (e.g., getUserData)
+- Prefer arrow functions for simple operations
+- Use default parameters and object destructuring
+- Document with JSDoc
+- Implement proper error handling and type checking
+- Use async/await for asynchronous operations
+- Handle Google Maps API errors gracefully
+- Implement proper loading states for map operations
+
+### Types and Interfaces
+
+- For any new types, prefer to create a Zod schema, and zod inference type for the created schema.
+- Create custom types/interfaces for complex structures
+- Use 'readonly' for immutable properties
+- If an import is only used as a type in the file, use 'import type' instead of 'import'
+- Define shared types in a dedicated types directory
+- Use discriminated unions for complex state management
+- Define proper types for Google Maps API responses
+- Create proper types for rating data structures
+
+### React Components
+
+- Use functional components with hooks
+- Implement proper prop types
+- Use React.memo for performance optimization when needed
+- Follow the container/presenter pattern for complex components
+- Implement proper loading and error states
+- Use proper event handling patterns
+- Handle map interactions efficiently
+- Implement proper form validation
+
+### State Management
+
+- Use React hooks for local state
+- Implement proper state updates
+- Use context for global state when necessary
+- Follow immutable state patterns
+- Implement proper state persistence
+- Handle map state efficiently
+- Manage rating data state properly
+
+## Code Review Checklist
+
+- Ensure proper typing
+- Check for code duplication
+- Verify error handling
+- Confirm test coverage
+- Review naming conventions
+- Assess overall code structure and readability
+- Check for accessibility compliance
+- Verify mobile responsiveness
+- Review performance implications
+- Check for security best practices
+- Verify Google Maps API integration
+- Review rating data validation
+
+## Documentation
+
+- All documentation files (except README.md) should be stored in the /docs directory
+- When writing documentation, README's, technical writing, technical documentation, JSDocs or comments, always follow Google's Technical Writing Style Guide.
+- Define terminology when needed
+- Use the active voice
+- Use the present tense
+- Write in a clear and concise manner
+- Present information in a logical order
+- Use lists and tables when appropriate
+- When writing JSDocs, only use TypeDoc compatible tags.
+- Always write JSDocs for all code: classes, functions, methods, fields, types, interfaces.
+- Include examples in documentation where appropriate
+- Document API endpoints and their usage
+- Document Google Maps API integration
+- Document rating system and data structures
+- Reference documentation files from README.md using relative paths (e.g., [Cloudflare Migration Guide](./docs/CLOUDFLARE_MIGRATION.md))
+
+## Git Commit Rules
+- Make the head / title of the commit message brief
+- Include elaborate details in the body of the commit message
+- Always follow the conventional commit message format
+- Add two newlines after the commit message title
+- Reference issues in commit messages when applicable
+- Keep commits focused and atomic
+- Write commit messages in the imperative mood
+
+## Cloudflare Integration
+
+### Architecture
+- Cloud-native, edge-first application architecture
+- Cloudflare D1 as single source of truth for all environments
+- API hosted on Cloudflare Workers
+- Frontend deployed to Cloudflare Pages
+- Zero Trust security model for admin access
+
+### Development Workflow
+- For frontend-only development: `npm run dev`
+- For local D1 development: `npm run dev:d1`
+- Always test changes locally before deployment
+- Use TypeScript and Zod for type safety
+
+### Deployment Rules
+1. **Frontend-Only Changes**:
+   ```bash
+   npm run build
+   npm run pages:deploy
+   ```
+
+2. **Full-Stack Changes**:
+   ```bash
+   npm run deploy:worker
+   npm run build
+   npm run pages:deploy
+   ```
+
+3. **Environment Setup**:
+   - Store variables in `.env.local`
+   - Set production variables in Cloudflare dashboard
+   - Use `NEXT_PUBLIC_` prefix for client-side variables
+
+4. **Deployment Verification**:
+   - Check Cloudflare Pages dashboard
+   - Test critical functionality
+   - Verify API connectivity
+   - Test admin interface access
+
+### Best Practices
+- Follow edge-first development principles
+- Implement proper error handling for API calls
+- Use proper TypeScript types for API responses
+- Maintain clear separation between frontend and API code
+- Document all API endpoints and types
+- Follow Zero Trust security model for admin access
+- Use event-driven design patterns
+- Implement progressive enhancement 
