@@ -1,15 +1,15 @@
-# Burrito Rater Codebase Reference
+# R8R Platform Codebase Reference
 
-This document provides a comprehensive reference of all custom variables and functions used throughout the Burrito Rater application.
+This document provides a comprehensive reference of all custom variables, functions, and multi-tenant patterns used throughout the R8R platform.
 
 ## Table of Contents
 - [Application Structure](#application-structure)
+- [Multi-Tenant Architecture](#multi-tenant-architecture)
 - [Environment Variables](#environment-variables)
 - [Types and Interfaces](#types-and-interfaces)
-- [Utility Functions](#utility-functions)
-- [Map Component Functions](#map-component-functions)
-- [Rating Form Functions](#rating-form-functions)
-- [State Variables](#state-variables)
+- [Tenant Management Functions](#tenant-management-functions)
+- [Platform Utility Functions](#platform-utility-functions)
+- [Legacy Components](#legacy-components)
 
 ## Application Structure
 
@@ -17,13 +17,21 @@ The application follows Next.js 13+ app directory structure with a clear separat
 
 ### Root Directory Structure
 ```
-burrito-rater/
-├── app/               # Main application code (Next.js app directory)
-├── api/               # Cloudflare Worker API code
-├── docs/              # Documentation files
-├── public/            # Static assets (images, _routes.json)
-├── scripts/          # Utility scripts and tools
-└── .env.local        # Environment variables (not in git)
+r8r/
+├── app/               # Multi-tenant Next.js application
+│   ├── types/        # Platform TypeScript definitions
+│   │   └── platform.ts # Multi-tenant types and interfaces
+├── api/               # Cloudflare Worker API code (legacy)
+├── docs/              # Platform documentation
+│   ├── MULTITENANT_SCHEMA.md # Database architecture
+│   ├── PLATFORM_ADMIN_GUIDE.md # Admin operations
+│   └── ...
+├── scripts/          # Platform management scripts
+│   ├── create_multitenant_schema.sql # Database setup
+│   ├── migrate_burrito_data.sql # Legacy data migration
+│   └── ...
+├── public/           # Static assets
+└── .env.local       # Environment variables (not in git)
 ```
 
 ### App Directory (`app/`)
@@ -149,7 +157,117 @@ public/
 - Build tools
 - Testing utilities
 
+## Multi-Tenant Architecture
+
+### Core Platform Types
+
+The platform is built around multi-tenant concepts defined in `app/types/platform.ts`:
+
+#### Primary Interfaces
+```typescript
+// Core tenant definition
+interface Tenant {
+  id: string;
+  subdomain: string;
+  name: string;
+  category: string;
+  config: TenantConfig;
+  branding?: TenantBranding;
+}
+
+// Flexible item system
+interface Item {
+  id: string;
+  tenant_id: string;
+  name: string;
+  venue_name: string;
+  attributes: Record<string, any>; // JSON-based flexibility
+}
+
+// Configurable rating system
+interface Rating {
+  id: string;
+  tenant_id: string;
+  item_id: string;
+  scores: Record<string, number>; // Dynamic rating categories
+  reviewer_info: ReviewerInfo;
+}
+```
+
+#### Configuration System
+```typescript
+// Tenant-specific configuration
+interface TenantConfig {
+  ratingCategories: RatingCategory[]; // taste/value vs crust/sauce/cheese
+  itemAttributes: ItemAttribute[];    // ingredients vs toppings vs features
+  locationRequired: boolean;
+  imageUploadEnabled: boolean;
+}
+
+// Flexible attribute definitions
+interface ItemAttribute {
+  id: string;
+  name: string;
+  type: 'text' | 'select' | 'multiselect' | 'scale' | 'boolean';
+  options?: string[];
+}
+```
+
+### Tenant Resolution System
+
+#### Subdomain-Based Routing
+```typescript
+// Automatic tenant detection
+function resolveTenantFromHost(host: string): string | null {
+  // burritos.r8r.one → "burritos"
+  // pizza-nyc.r8r.one → "pizza-nyc"
+  const match = host.match(/^([^.]+)\.r8r\.one$/);
+  return match ? match[1] : null;
+}
+```
+
+#### API Tenant Context
+```typescript
+// Middleware adds tenant context to all requests
+interface ApiRequest extends Request {
+  tenantId: string;
+  tenantConfig: TenantConfig;
+}
+```
+
+### Data Isolation Patterns
+
+#### Database Query Pattern
+```sql
+-- ALL queries must include tenant_id
+SELECT * FROM ratings 
+WHERE tenant_id = ? AND status = 'confirmed'
+ORDER BY created_at DESC;
+
+-- Cross-tenant queries prohibited
+SELECT * FROM ratings WHERE status = 'confirmed'; -- ❌ Missing tenant_id
+```
+
+#### API Response Pattern
+```typescript
+// All API responses include tenant context
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  tenant_id: string;
+  tenant_config?: TenantConfig;
+}
+```
+
 ## Environment Variables
+
+### Platform Configuration
+- `NEXT_PUBLIC_PLATFORM_DOMAIN`: Base platform domain (r8r.one)
+- `NEXT_PUBLIC_API_BASE_URL`: Platform API URL (api.r8r.one)
+- `PLATFORM_DB_ID`: Multi-tenant database ID
+- `PLATFORM_JWT_SECRET`: Platform authentication secret
+
+### Legacy Single-Tenant Variables (for migration)
 
 ### API Configuration
 - `NEXT_PUBLIC_API_BASE_URL`: Base URL for the Cloudflare Worker API

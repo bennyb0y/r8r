@@ -1,8 +1,8 @@
-# Burrito Rater Design Philosophy
+# R8R Platform Design Philosophy
 
 ## Overview
 
-This document outlines the high-level design philosophy and architectural decisions behind the Burrito Rater project. It serves as a guide for understanding why certain technical choices were made and how they align with our goals.
+This document outlines the high-level design philosophy and architectural decisions behind the R8R multi-tenant rating platform. It serves as a guide for understanding why certain technical choices were made and how they align with our goals of creating a scalable, flexible platform for any type of rating community.
 
 ## Core Design Principles
 
@@ -91,6 +91,26 @@ We prioritize API-driven development:
 - **Versioned APIs**: Clear API versioning strategy for evolution
 - **Self-documenting**: OpenAPI/Swagger documentation built-in
 - **API-driven Features**: New features start with API design
+
+### 7. Multi-Tenant Architecture
+
+R8R Platform is designed as a true multi-tenant SaaS platform:
+
+- **Tenant Isolation**: Complete data separation between tenants using tenant_id
+- **Shared Infrastructure**: Single codebase serves all tenants efficiently
+- **Configurable Everything**: Rating categories, attributes, and branding per tenant
+- **Subdomain Routing**: Each tenant gets their own subdomain (pizza.r8r.one)
+- **Flexible Data Model**: JSON-based attributes support any rating category
+- **Tenant-Aware APIs**: All endpoints automatically resolve tenant context
+- **Independent Scaling**: Per-tenant performance optimization and limits
+- **Zero Cross-Contamination**: Strict tenant boundaries at database level
+
+Benefits of this approach:
+- Enables unlimited rating categories (burritos → pizza → coffee → anything)
+- Reduces operational overhead compared to separate deployments
+- Provides consistent platform features across all tenants
+- Allows rapid tenant onboarding and customization
+- Maintains security and performance isolation
 
 ## Technical Decisions
 

@@ -1,264 +1,295 @@
-# API Worker Documentation
+# R8R Platform API Documentation
 
-This document provides information about the Cloudflare Worker API used in the Burrito Rater application.
+This document provides information about the Cloudflare Worker API used in the R8R multi-tenant rating platform.
 
 ## Overview
 
-The Burrito Rater API is implemented as a Cloudflare Worker that handles all data operations for the application. It connects to a Cloudflare D1 database to store and retrieve burrito ratings.
+The R8R Platform API is implemented as a Cloudflare Worker that handles all data operations for the multi-tenant rating platform. It connects to a Cloudflare D1 database with strict tenant isolation and provides tenant-aware endpoints for ratings, items, and tenant management.
 
-## File Structure
+## Architecture
 
-- **`api/worker.js`**: The main worker script that handles all API requests
-- **`wrangler.worker.toml`**: Configuration file for the worker deployment
+### Multi-Tenant Design
+- **Tenant Resolution**: Automatic tenant detection from subdomain or header
+- **Data Isolation**: All queries include `tenant_id` for complete data separation
+- **Configuration-Driven**: API responses adapt to tenant-specific rating categories
+- **Security**: Tenant boundaries enforced at the database level
 
-## API Endpoints
+### File Structure
+- **`api/worker.js`**: Main worker script with multi-tenant routing
+- **`wrangler.worker.toml`**: Worker deployment configuration
+- **`app/types/platform.ts`**: TypeScript definitions for API contracts
 
-The worker exposes the following endpoints:
+## Multi-Tenant API Endpoints
 
-### Ratings
+All endpoints automatically resolve the current tenant from:
+1. **Subdomain**: `burritos.r8r.one` → `tenant_id: "burritos"`
+2. **Header**: `X-Tenant-ID: pizza-nyc` 
+3. **Path**: `/api/tenants/coffee-sf/ratings`
+
+### Tenant Management
+
+#### GET `/tenants/:tenantId`
+- Returns tenant configuration and metadata
+- **Response**: Tenant object with config, branding, settings
+- **Access**: Public (basic info) or Admin (full config)
+
+#### PUT `/tenants/:tenantId/config`
+- Updates tenant configuration (rating categories, attributes)
+- **Auth**: Tenant admin required
+- **Body**: Updated tenant configuration object
+
+### Items (Generic Items Being Rated)
+
+#### GET `/items`
+- Returns items for current tenant with optional filtering
+- **Query Parameters**:
+  - `venue`: Filter by venue name
+  - `zipcode`: Filter by location
+  - `status`: Filter by item status (active/inactive)
+  - `limit`: Number of results (default: 50)
+  - `offset`: Pagination offset
+
+#### POST `/items`
+- Creates a new item for rating
+- **Auth**: Authenticated user or admin
+- **Body**: Item details with tenant-specific attributes
+- **Response**: Created item with generated ID
+
+#### GET `/items/:itemId`
+- Returns specific item with aggregated rating data
+- **Response**: Item with average scores and rating count
+
+### Ratings (Tenant-Aware Rating System)
 
 #### GET `/ratings`
-- Returns all ratings ordered by creation date (descending)
-- No query parameters required
-- Response: Array of Rating objects
+- Returns ratings for current tenant
+- **Query Parameters**:
+  - `item_id`: Filter by specific item
+  - `status`: Filter by confirmation status
+  - `confirmed_only`: Boolean for public views
+  - `limit`: Number of results (default: 50)
+  - `offset`: Pagination offset
 
 #### POST `/ratings`
-- Creates a new rating
-- Requires JSON body with rating details
-- Requires Turnstile CAPTCHA token
-- Response: `{ "message": "Rating submitted successfully" }`
+- Creates a new rating for an item
+- **Auth**: CAPTCHA validation required
+- **Body**: Rating with tenant-configured score categories
+- **Response**: `{ "success": true, "rating_id": "uuid" }`
 
-#### DELETE `/ratings/:id`
-- Deletes a specific rating
-- Verifies rating exists before deletion
-- Response: `{ "success": true, "message": "Rating deleted successfully" }`
-- Error: 404 if rating not found
+#### GET `/ratings/:ratingId`
+- Returns specific rating details
+- **Access**: Public for confirmed, admin for pending
 
-#### PUT `/ratings/:id/confirm`
-- Confirms a specific rating
-- Sets `confirmed = 1` in database
-- Verifies rating exists before confirmation
-- Response: `{ "success": true, "message": "Rating confirmed successfully" }`
-- Error: 404 if rating not found
+#### PUT `/ratings/:ratingId/confirm`
+- Confirms a pending rating
+- **Auth**: Tenant admin required
+- **Response**: `{ "success": true, "message": "Rating confirmed" }`
 
-#### POST `/ratings/confirm-bulk`
+#### DELETE `/ratings/:ratingId`
+- Deletes a rating
+- **Auth**: Tenant admin required
+- **Response**: `{ "success": true, "message": "Rating deleted" }`
+
+#### POST `/ratings/bulk-confirm`
 - Confirms multiple ratings at once
-- Request body: `{ "ids": number[] }`
-- Updates all specified ratings to confirmed status
-- Response: `{ "success": true, "message": "Ratings confirmed successfully" }`
-- Error: 400 if IDs array is invalid or empty
+- **Auth**: Tenant admin required
+- **Body**: `{ "rating_ids": ["id1", "id2", "id3"] }`
 
-### Error Responses
+### Analytics & Aggregation
 
-All error responses follow the format:
+#### GET `/analytics/summary`
+- Returns tenant analytics summary
+- **Auth**: Tenant admin required
+- **Response**: Total ratings, average scores, top items
+
+#### GET `/analytics/items/:itemId`
+- Returns detailed analytics for specific item
+- **Response**: Rating breakdown, score distribution, trends
+
+### Admin Management
+
+#### GET `/admin/tenants`
+- Lists all tenants (platform admin only)
+- **Auth**: Platform admin required
+
+#### POST `/admin/tenants`
+- Creates new tenant
+- **Auth**: Platform admin required
+- **Body**: Tenant configuration and initial settings
+
+## Request/Response Format
+
+### Standard Response Envelope
 ```json
 {
-  "error": "Error message"
+  "success": boolean,
+  "data": any,
+  "error": string,
+  "tenant_id": string,
+  "timestamp": string
 }
 ```
 
-Common status codes:
-- 200: Success
-- 400: Bad Request (invalid input)
-- 404: Not Found
-- 405: Method Not Allowed
-- 500: Internal Server Error
+### Pagination Response
+```json
+{
+  "success": true,
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 150,
+    "total_pages": 3,
+    "has_next": true,
+    "has_prev": false
+  },
+  "tenant_id": "burritos"
+}
+```
 
-### Migration
+### Error Response
+```json
+{
+  "success": false,
+  "error": "Tenant not found",
+  "error_code": "TENANT_NOT_FOUND",
+  "tenant_id": null
+}
+```
 
-- **POST `/api/migrate/add-confirmed-column`**: Add the confirmed column to the Rating table
-  - Used for database migrations
+## Authentication & Authorization
+
+### Tenant Admin Authentication
+- **Method**: JWT tokens with tenant-specific claims
+- **Scope**: Per-tenant admin operations
+- **Claims**: `tenant_id`, `role`, `permissions`
+
+### CAPTCHA Validation
+- **Required for**: Public rating submissions
+- **Provider**: Cloudflare Turnstile
+- **Validation**: Server-side token verification
+
+### Rate Limiting
+- **Public endpoints**: 100 requests/minute per IP
+- **Admin endpoints**: 1000 requests/minute per authenticated user
+- **Tenant-specific**: Configurable limits per tenant
+
+## Configuration Examples
+
+### Burrito Tenant API Usage
+```javascript
+// GET /ratings for burritos.r8r.one
+{
+  "data": [
+    {
+      "id": "rating_123",
+      "item_id": "item_carne_asada_la_taqueria",
+      "scores": {
+        "overall": 4.5,
+        "taste": 5.0,
+        "value": 4.0
+      },
+      "reviewer_info": {
+        "name": "FoodLover",
+        "emoji": "🌮"
+      }
+    }
+  ],
+  "tenant_id": "burritos"
+}
+```
+
+### Pizza Tenant API Usage
+```javascript
+// GET /ratings for pizza-nyc.r8r.one  
+{
+  "data": [
+    {
+      "id": "rating_456",
+      "item_id": "item_margherita_joes_pizza",
+      "scores": {
+        "overall": 4.2,
+        "crust": 4.5,
+        "sauce": 4.0,
+        "cheese": 4.0
+      },
+      "reviewer_info": {
+        "name": "PizzaExpert",
+        "emoji": "🍕"
+      }
+    }
+  ],
+  "tenant_id": "pizza-nyc"
+}
+```
 
 ## Development
 
-Following our cloud-native philosophy, all API development is done directly in the cloud:
-
-1. Edit the `api/worker.js` file
-2. Deploy using:
-   ```bash
-   npm run deploy:worker
-   ```
-3. Test the deployed endpoints
-
-### Development Best Practices
-
-- **Testing Changes**:
-  - Create a staging worker for critical changes
-  - Use feature flags for controlled rollout
-  - Implement comprehensive error handling
-  - Log extensively during testing
-
-- **Deployment Strategy**:
-  - Deploy small, atomic changes
-  - Test each endpoint after deployment
-  - Monitor worker logs for errors
-  - Have a rollback plan ready
-
-### Why Cloud-Native Development?
-
-- **Consistency**: Development matches production environment
-- **Simplicity**: No local setup required
-- **Reliability**: Tests run against actual cloud infrastructure
-- **Speed**: Immediate deployment and testing
-
-## Deployment
-
-To deploy the worker:
-
+### Local Development
 ```bash
-# Deploy only the API worker
+# Start worker development server
+npx wrangler dev --config wrangler.worker.toml
+
+# Test with tenant context
+curl -H "X-Tenant-ID: burritos" http://localhost:8787/ratings
+```
+
+### Deployment
+```bash
+# Deploy to production
 npm run deploy:worker
 
-# Or, deploy both API and frontend
-npm run deploy
+# Deploy with specific environment
+npx wrangler deploy --config wrangler.worker.toml --env production
 ```
 
-### Deployment Verification
+### Environment Variables
+Required worker environment variables:
+- `PLATFORM_DB_ID`: Multi-tenant D1 database ID
+- `TURNSTILE_SECRET_KEY`: CAPTCHA validation secret
+- `JWT_SECRET`: Token signing secret
+- `R2_BUCKET_NAME`: Image storage bucket
 
-After deploying:
-1. Check the worker status in Cloudflare dashboard
-2. Verify D1 database binding is correct
-3. Test all affected endpoints
-4. Monitor worker logs for any errors
+## Migration from Legacy API
 
-## Configuration
+### Endpoint Mapping
+| Legacy Endpoint | New Multi-Tenant Endpoint | Notes |
+|-----------------|---------------------------|-------|
+| `GET /ratings` | `GET /ratings?confirmed_only=true` | Tenant-filtered automatically |
+| `POST /ratings` | `POST /ratings` | Requires tenant context |
+| `DELETE /ratings/:id` | `DELETE /ratings/:id` | Tenant isolation enforced |
+| `PUT /ratings/:id/confirm` | `PUT /ratings/:id/confirm` | Admin auth required |
 
-The project uses two separate Wrangler configuration files for different purposes:
+### Data Format Changes
+- **Legacy**: Fixed burrito ingredient fields
+- **New**: JSON-based flexible attributes per tenant
+- **Scores**: Fixed taste/value → Configurable rating categories
+- **Migration**: Automatic transformation via migration script
 
-### Worker Configuration (`wrangler.worker.toml`)
+## Security Considerations
 
-This file is specifically for the Cloudflare Worker deployment:
+### Tenant Data Isolation
+- All database queries include `tenant_id` filtering
+- Cross-tenant data access prevented at API level
+- Admin operations scoped to specific tenant
 
-```toml
-name = "burrito-rater"
-compatibility_date = "2023-09-01"
-compatibility_flags = ["nodejs_compat"]
-main = "api/worker.js"
+### Input Validation
+- JSON schema validation for all POST/PUT requests
+- Tenant configuration validation against allowed schemas
+- SQL injection prevention with parameterized queries
 
-[[d1_databases]]
-binding = "DB"
-database_name = "your-database-name"
-database_id = "your-database-id"
-```
-
-The key settings are:
-- `main = "api/worker.js"`: Specifies the entry point for the worker
-- `[[d1_databases]]`: Configures the D1 database binding
-
-### Pages Configuration (`wrangler.toml`)
-
-This file is used for Cloudflare Pages deployment:
-
-```toml
-name = "burrito-rater"
-compatibility_date = "2023-09-01"
-compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "your-database-name"
-database_id = "your-database-id"
-```
-
-The key setting is:
-- `pages_build_output_dir = ".vercel/output/static"`: Specifies the directory containing the built static files
-
-Make sure to update the `database_name` and `database_id` with your actual Cloudflare D1 database information in both files.
-
-## Cloudflare Turnstile Integration
-
-The API worker integrates with Cloudflare Turnstile to prevent spam submissions and bot attacks.
-
-### Secret Key Setup
-
-The Turnstile secret key must be set as a Worker secret:
-
-```bash
-npx wrangler secret put TURNSTILE_SECRET_KEY
-```
-
-When prompted, enter your Turnstile secret key. This ensures the secret is securely stored and not exposed in your codebase.
-
-### Token Validation
-
-When a rating is submitted, the worker:
-
-1. Extracts the Turnstile token from the request
-2. Validates the token with Cloudflare's verification API
-3. Rejects the submission if the token is invalid
-
-The validation function handles:
-- Test tokens for development environments
-- Production tokens for live environments
-- Error handling and logging
-
-### Development Mode
-
-In development mode, the worker accepts:
-- Test tokens that start with `test_verification_token_`
-- Tokens that start with `0.` when not in production mode
-- Provides more lenient validation to facilitate testing
-
-### Production Mode
-
-In production mode, the worker:
-- Strictly validates all tokens with Cloudflare's API
-- Requires a valid secret key to be set
-- Rejects submissions with invalid tokens
-
-For more details on the Turnstile implementation, see the [CAPTCHA Implementation Guide](./CAPTCHA_IMPLEMENTATION.md).
-
-## Development
-
-When making changes to the API:
-
-1. Edit the `api/worker.js` file
-2. Deploy the changes using `npm run deploy:worker`
-3. Test the API endpoints to ensure they're working correctly
-
-## Error Handling
-
-The worker includes error handling for:
-- Invalid requests
-- Database errors
-- Missing resources
-- Authentication failures
-- CAPTCHA validation failures
-
-All errors are returned as JSON responses with appropriate HTTP status codes.
-
-## CORS Configuration
-
-The worker implements CORS headers for all responses:
-
+### CORS Configuration
 ```javascript
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*.r8r.one',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-ID',
 };
 ```
 
-All responses include these CORS headers to allow:
-- Cross-origin requests from any domain
-- All required HTTP methods (GET, POST, PUT, DELETE, OPTIONS)
-- Content-Type and Authorization headers
-
-The worker also handles OPTIONS (preflight) requests automatically with a 204 status code.
-
-## Security
-
-- The worker does not implement authentication for most endpoints
-- Admin operations (like confirming ratings) should be protected in the frontend
-- CAPTCHA validation is required for all rating submissions
-- Consider adding authentication if deploying in a production environment
-
 ## Related Documentation
 
-- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
-- [Cloudflare D1 Documentation](https://developers.cloudflare.com/d1/)
-- [Cloudflare Turnstile Documentation](https://developers.cloudflare.com/turnstile/)
-- [CAPTCHA Implementation Guide](./CAPTCHA_IMPLEMENTATION.md)
-- [Deployment Guide](./DEPLOYMENT.md)
-- [Workflow Guide](./WORKFLOW.md) 
+- [Multi-Tenant Schema](./MULTITENANT_SCHEMA.md) - Database design
+- [Platform Types](../app/types/platform.ts) - TypeScript definitions
+- [Admin Guide](./ADMIN_DEVOPS.md) - Deployment and management
+- [CAPTCHA Implementation](./CAPTCHA_IMPLEMENTATION.md) - Security integration
