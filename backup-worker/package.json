@@ -1,7 +1,7 @@
 {
-  "name": "burrito-backup-worker",
+  "name": "r8r-backup-worker",
   "version": "1.0.0",
-  "description": "Cloudflare Worker for backing up D1 database to R2",
+  "description": "Cloudflare Worker for backing up R8R platform D1 database to R2",
   "main": "src/index.ts",
   "scripts": {
     "deploy:backup": "CF_API_TOKEN=$CF_API_TOKEN wrangler deploy --config wrangler.backup.toml",
