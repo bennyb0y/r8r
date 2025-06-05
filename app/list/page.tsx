@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MiniMap from '../components/MiniMap';
-import { getApiUrl } from '../config.js';
+import { getApiUrl, getTenantHeaders } from '../config';
 
 interface Rating {
   id: string;
@@ -46,8 +46,10 @@ export default function ListPage() {
         // Check if we're in development mode and API might not be available
         const isDevelopment = process.env.NODE_ENV === 'development';
         
-        // Fetch all ratings from the API
-        const response = await fetch(getApiUrl('ratings'));
+        // Fetch all ratings from the API with tenant context
+        const response = await fetch(getApiUrl('ratings'), {
+          headers: getTenantHeaders()
+        });
         
         if (!response.ok) {
           if (isDevelopment) {

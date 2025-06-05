@@ -41,6 +41,54 @@ async function validateTurnstileToken(token, ip, env) {
   }
 }
 
+// Helper function to detect tenant from request
+function getTenantFromRequest(request) {
+  // Try to get tenant from various sources
+  
+  // 1. Check for X-Tenant-ID header (sent by frontend)
+  const tenantHeader = request.headers.get('X-Tenant-ID');
+  if (tenantHeader) {
+    console.log(`Tenant detected from header: ${tenantHeader}`);
+    return tenantHeader;
+  }
+  
+  // 2. Check for tenant query parameter
+  const url = new URL(request.url);
+  const tenantParam = url.searchParams.get('tenant');
+  if (tenantParam) {
+    console.log(`Tenant detected from query param: ${tenantParam}`);
+    return tenantParam;
+  }
+  
+  // 3. Try to detect from Host header (for routing worker integration)
+  const host = request.headers.get('Host') || request.headers.get('X-Original-Host');
+  if (host) {
+    // Check for *.r8r.one pattern
+    const match = host.match(/^([^.]+)\.r8r\.one$/);
+    if (match && match[1] !== 'www' && match[1] !== 'api') {
+      console.log(`Tenant detected from host: ${match[1]}`);
+      return match[1];
+    }
+    
+    // Check for api.r8r.one with referrer
+    if (host === 'api.r8r.one') {
+      const referer = request.headers.get('Referer');
+      if (referer) {
+        const refererUrl = new URL(referer);
+        const refererMatch = refererUrl.hostname.match(/^([^.]+)\.r8r\.one$/);
+        if (refererMatch && refererMatch[1] !== 'www') {
+          console.log(`Tenant detected from referer: ${refererMatch[1]}`);
+          return refererMatch[1];
+        }
+      }
+    }
+  }
+  
+  // 4. Default to 'burritos' for backward compatibility
+  console.log('No tenant detected, defaulting to burritos');
+  return 'burritos';
+}
+
 // Helper function to validate API key
 function validateApiKey(request, env) {
   const authHeader = request.headers.get('Authorization');
@@ -226,8 +274,11 @@ const workerHandler = {
         // Handle ratings endpoint
         if (path === 'ratings') {
           if (request.method === 'GET') {
-            // Get all ratings using new multi-tenant schema
-            // Default to 'burritos' tenant for backward compatibility
+            // Detect tenant from request
+            const tenantId = getTenantFromRequest(request);
+            console.log(`Fetching ratings for tenant: ${tenantId}`);
+            
+            // Get all ratings using new multi-tenant schema with proper tenant isolation
             const { results } = await env.DB.prepare(`
               SELECT 
                 r.*,
@@ -238,9 +289,9 @@ const workerHandler = {
                 i.zipcode
               FROM ratings r
               JOIN items i ON r.item_id = i.id
-              WHERE r.tenant_id = 'burritos' AND r.status = 'confirmed'
+              WHERE r.tenant_id = ? AND r.status = 'confirmed'
               ORDER BY r.created_at DESC
-            `).all();
+            `).bind(tenantId).all();
             
             // Transform to legacy format
             const legacyResults = results.map(row => {
@@ -338,14 +389,15 @@ const workerHandler = {
         if (ratingMatch) {
           const id = parseInt(ratingMatch[1]);
           const action = ratingMatch[2]?.replace('/', '') || '';
+          const tenantId = getTenantFromRequest(request);
           
-          // Verify the rating exists (using new schema)
+          // Verify the rating exists (using new schema with tenant isolation)
           const rating = await env.DB.prepare(`
             SELECT r.*, i.name as item_name, i.venue_name, i.latitude, i.longitude, i.zipcode
             FROM ratings r
             JOIN items i ON r.item_id = i.id
-            WHERE r.tenant_id = 'burritos' AND r.id = ?
-          `).bind(`rating_${id}`).first();
+            WHERE r.tenant_id = ? AND r.id = ?
+          `).bind(tenantId, `rating_${id}`).first();
             
           if (!rating) {
             return errorResponse('Rating not found', 404);
@@ -354,7 +406,7 @@ const workerHandler = {
           // Handle DELETE request
           if (request.method === 'DELETE' && !action) {
             const result = await env.DB.prepare('DELETE FROM ratings WHERE tenant_id = ? AND id = ?')
-              .bind('burritos', `rating_${id}`)
+              .bind(tenantId, `rating_${id}`)
               .run();
               
             if (result.success) {
@@ -367,7 +419,7 @@ const workerHandler = {
           // Handle confirmation
           if (request.method === 'PUT' && action === 'confirm') {
             const result = await env.DB.prepare('UPDATE ratings SET status = ? WHERE tenant_id = ? AND id = ?')
-              .bind('confirmed', 'burritos', `rating_${id}`)
+              .bind('confirmed', tenantId, `rating_${id}`)
               .run();
               
             if (result.success) {
@@ -386,11 +438,14 @@ const workerHandler = {
             return errorResponse('Invalid or empty ID list', 400);
           }
           
+          const tenantId = getTenantFromRequest(request);
+          console.log(`Bulk confirming ratings for tenant: ${tenantId}`);
+          
           // Convert legacy IDs to new format and update with tenant context
           const ratingIds = ids.map(id => `rating_${id}`);
           const placeholders = ratingIds.map(() => '?').join(',');
-          const result = await env.DB.prepare(`UPDATE ratings SET status = 'confirmed' WHERE tenant_id = 'burritos' AND id IN (${placeholders})`)
-            .bind(...ratingIds)
+          const result = await env.DB.prepare(`UPDATE ratings SET status = 'confirmed' WHERE tenant_id = ? AND id IN (${placeholders})`)
+            .bind(tenantId, ...ratingIds)
             .run();
             
           if (result.success) {

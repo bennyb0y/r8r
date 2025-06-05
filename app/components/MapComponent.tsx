@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox, InfoWindow, Libraries } from '@react-google-maps/api';
 import { Rating } from '../types/rating';
 import RatingForm from './RatingForm';
-import { getApiUrl } from '../config.js';
+import { getApiUrl, getTenantHeaders } from '../config';
 
 const containerStyle = {
   width: '100%',
@@ -110,8 +110,10 @@ const MapComponent: React.FC<MapProps> = ({ refreshTrigger = 0 }) => {
         // Check if we're in development mode and API might not be available
         const isDevelopment = process.env.NODE_ENV === 'development';
         
-        // Fetch all ratings from the API
-        const response = await fetch(getApiUrl('ratings'));
+        // Fetch all ratings from the API with tenant context
+        const response = await fetch(getApiUrl('ratings'), {
+          headers: getTenantHeaders()
+        });
         
         if (!response.ok) {
           if (isDevelopment) {

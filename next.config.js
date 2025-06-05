@@ -100,8 +100,7 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Enable production compression
   compress: true,
-  // Use static export for Cloudflare Pages compatibility
-  output: 'export',
+  // Removed static export to support dynamic API routes
   experimental: {
     optimizeCss: true,
     webpackBuildWorker: true

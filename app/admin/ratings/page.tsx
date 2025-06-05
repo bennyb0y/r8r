@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Card, Table, TableRow, TableCell, TableHead, TableHeaderCell, TableBody } from '@tremor/react';
-import { getApiUrl } from '../../config.js';
+import { getApiUrl, getTenantHeaders } from '../../config';
 
 interface Rating {
   id: number;
@@ -71,7 +71,9 @@ export default function RatingsPage() {
 
   const fetchRatings = useCallback(async () => {
     try {
-      const response = await fetch(getApiUrl('ratings'));
+      const response = await fetch(getApiUrl('ratings'), {
+        headers: getTenantHeaders()
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch ratings');
       }
@@ -110,6 +112,7 @@ export default function RatingsPage() {
     try {
       const response = await fetch(getApiUrl(`ratings/${id}/confirm`), {
         method: 'PUT',
+        headers: getTenantHeaders()
       });
       if (!response.ok) {
         throw new Error('Failed to confirm rating');
@@ -134,6 +137,7 @@ export default function RatingsPage() {
     try {
       const response = await fetch(getApiUrl(`ratings/${id}`), {
         method: 'DELETE',
+        headers: getTenantHeaders()
       });
       if (!response.ok) {
         throw new Error('Failed to delete rating');
@@ -161,9 +165,7 @@ export default function RatingsPage() {
     try {
       const response = await fetch(getApiUrl('ratings/confirm-bulk'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getTenantHeaders(),
         body: JSON.stringify({ ids: Array.from(selectedIds) }),
       });
       
@@ -201,6 +203,7 @@ export default function RatingsPage() {
       const deletePromises = Array.from(selectedIds).map(id =>
         fetch(getApiUrl(`ratings/${id}`), {
           method: 'DELETE',
+          headers: getTenantHeaders()
         })
       );
 

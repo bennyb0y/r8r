@@ -1,48 +1,68 @@
-// Configuration for the R8R multi-tenant platform
-import { getCurrentTenant } from '../lib/tenant';
+// Configuration for the application
 
-// API configuration with tenant context
+// Helper function to get current tenant from various sources
+const getCurrentTenant = (): string => {
+  if (typeof window === 'undefined') {
+    return 'burritos'; // Default for SSR
+  }
+  
+  // 1. Try to detect from hostname
+  const hostname = window.location.hostname;
+  const match = hostname.match(/^([^.]+)\.r8r\.one$/);
+  if (match && match[1] !== 'www' && match[1] !== 'api') {
+    return match[1];
+  }
+  
+  // 2. Check for tenant in URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const tenantParam = urlParams.get('tenant');
+  if (tenantParam) {
+    return tenantParam;
+  }
+  
+  // 3. Default to burritos
+  return 'burritos';
+};
+
+// API configuration
 export const getApiUrl = (endpoint: string, tenantId?: string): string => {
-  // Use platform API URL for multi-tenant setup
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.r8r.one';
+  // Use the environment variable for the API base URL or default to new worker
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://r8r-platform-api.bennyfischer.workers.dev';
   
-  // Get tenant ID from parameter or current context
-  const currentTenant = tenantId || getCurrentTenant();
-  
-  console.log(`Using API base URL: ${baseUrl} for tenant: ${currentTenant}`);
+  console.log(`Using API base URL: ${baseUrl}`);
   
   // Ensure the endpoint has the correct format
   let formattedEndpoint = endpoint;
   
-  // Add /api/ prefix if not already present
-  if (!endpoint.startsWith('/api/') && !endpoint.startsWith('api/')) {
-    formattedEndpoint = `api/${endpoint}`;
-  } else if (endpoint.startsWith('/')) {
-    formattedEndpoint = endpoint.substring(1);
+  // Remove /api/ prefix if present (since our worker doesn't use this prefix)
+  if (formattedEndpoint.startsWith('/api/')) {
+    formattedEndpoint = formattedEndpoint.substring(5);
+  } else if (formattedEndpoint.startsWith('api/')) {
+    formattedEndpoint = formattedEndpoint.substring(4);
   }
   
-  // Combine the base URL and endpoint
-  return `${baseUrl}/${formattedEndpoint}`;
+  // Remove leading slash if present
+  if (formattedEndpoint.startsWith('/')) {
+    formattedEndpoint = formattedEndpoint.substring(1);
+  }
+  
+  // Add tenant parameter if not provided directly
+  const tenant = tenantId || getCurrentTenant();
+  
+  // Combine the base URL, endpoint, and tenant parameter
+  return `${baseUrl}/${formattedEndpoint}?tenant=${tenant}`;
 };
 
-// Platform configuration
-export const PLATFORM_CONFIG = {
-  domain: process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || 'r8r.one',
-  apiUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.r8r.one',
-  isDevelopment: process.env.NODE_ENV === 'development',
-  defaultTenant: process.env.NEXT_PUBLIC_DEV_TENANT_ID || 'burritos'
-};
-
-// Tenant context provider for client-side
-export function getTenantContext() {
-  if (typeof window === 'undefined') return null;
-  
-  const tenant = getCurrentTenant();
-  if (!tenant) return null;
-  
-  return {
-    tenantId: tenant,
-    subdomain: tenant,
-    // Additional context will be loaded from API
+// Helper function to get headers with tenant information
+export const getTenantHeaders = (tenantId?: string, includeContentType: boolean = true): Record<string, string> => {
+  const tenant = tenantId || getCurrentTenant();
+  const headers: Record<string, string> = {
+    'X-Tenant-ID': tenant
   };
-} 
+  
+  if (includeContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  return headers;
+}; 
