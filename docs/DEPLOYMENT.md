@@ -184,19 +184,19 @@ routes = [
 
 ### wrangler.worker.toml
 ```toml
-name = "burrito-rater"
-compatibility_date = "2023-09-01"
+name = "r8r-platform-api"
+compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 main = "api/worker.js"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "burrito-rater-db"
+database_name = "r8r-platform-db"
 database_id = "your_database_id"
 
 [[r2_buckets]]
 binding = "BUCKET"
-bucket_name = "burrito-rater-bucket"
+bucket_name = "r8r-images"
 ```
 
 ### wrangler.pages.toml
@@ -342,11 +342,11 @@ curl https://your-worker.your-account.workers.dev/api/ratings
 ```bash
 # Check worker logs
 npx wrangler tail r8r-routing --env production
-npx wrangler tail burrito-rater
+npx wrangler tail r8r-platform-api
 
 # Check deployment status
 npx wrangler deployments list --name r8r-routing
-npx wrangler deployments list --name burrito-rater
+npx wrangler deployments list --name r8r-platform-api
 
 # Test local routing
 npx wrangler dev --config wrangler.routing.toml --local
@@ -358,7 +358,7 @@ After deployment, run these checks:
 
 ```bash
 # Check all workers are deployed
-npx wrangler list | grep -E "(r8r-routing|burrito-rater)"
+npx wrangler list | grep -E "(r8r-routing|r8r-platform-api)"
 
 # Test main domain
 curl -I https://r8r.one
@@ -383,7 +383,7 @@ npx wrangler rollback --name r8r-routing --version-id <previous-version-id>
 
 ### Rollback API Worker
 ```bash
-npx wrangler rollback --name burrito-rater --version-id <previous-version-id>
+npx wrangler rollback --name r8r-platform-api --version-id <previous-version-id>
 ```
 
 ### Rollback Frontend

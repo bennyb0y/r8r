@@ -1,13 +1,13 @@
 # Known Bugs and Issues
 
-This document tracks known bugs and issues in the Burrito Rater application. Please reference the issue number when fixing bugs and update this list accordingly.
+This document tracks known bugs and issues in the R8R multi-tenant rating platform. Please reference the issue number when fixing bugs and update this list accordingly.
 
 ## 🐛 Active Bugs
 
 ### High Priority
 
-1. **Image Upload Path Issue** - #018
-   - Description: Image paths in database and URLs are inconsistent with the required format
+1. **Multi-Tenant Image Upload Path Issue** - #018
+   - Description: Image paths in database and URLs are inconsistent with the required format for tenant-aware storage
    - Affected areas: 
      - Database storage (storing full path instead of filename)
      - Image URL construction in web app
@@ -25,8 +25,8 @@ This document tracks known bugs and issues in the Burrito Rater application. Ple
      - Download URL generation needs to be updated to include full path
      - Affects both display and download functionality
 
-2. **Cloudflare Turnstile CAPTCHA Styling** - #019
-   - Description: CAPTCHA implementation is not using Cloudflare's default styling and images
+2. **Tenant-Aware CAPTCHA Configuration** - #019
+   - Description: CAPTCHA implementation needs to support tenant-specific configurations and branding
    - Affected areas: 
      - Rating submission form
      - CAPTCHA component styling
@@ -59,12 +59,12 @@ This document tracks known bugs and issues in the Burrito Rater application. Ple
    - Priority: Medium
    - Impact: User confusion during submission process
 
-2. **Map Marker Clustering** - #006
-   - Description: Map markers overlap in areas with many ratings
-   - Affected areas: Map view
-   - Steps to reproduce: View areas with multiple ratings close together
+2. **Multi-Tenant Map Marker Clustering** - #006
+   - Description: Map markers overlap in areas with many ratings and need tenant-aware clustering
+   - Affected areas: Map view, tenant-specific data display
+   - Steps to reproduce: View areas with multiple ratings close together from different tenants
    - Priority: Medium
-   - Impact: Difficulty selecting specific ratings in dense areas
+   - Impact: Difficulty selecting specific ratings in dense areas, potential cross-tenant visibility issues
 
 ## 🔄 Recently Fixed Bugs
 

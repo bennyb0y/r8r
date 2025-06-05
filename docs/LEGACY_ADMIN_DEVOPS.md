@@ -1,6 +1,8 @@
-# Burrito Rater Administration and DevOps Guide
+# R8R Platform Legacy Administration and DevOps Guide
 
-This comprehensive guide covers all aspects of deploying, administering, and maintaining the Burrito Rater application, including DevOps workflows and best practices.
+This comprehensive guide covers all aspects of deploying, administering, and maintaining the R8R multi-tenant rating platform, including DevOps workflows and best practices.
+
+> **Note**: This is the legacy single-tenant documentation. For current multi-tenant platform documentation, see [PLATFORM_ADMIN_GUIDE.md](./PLATFORM_ADMIN_GUIDE.md).
 
 ## Table of Contents
 

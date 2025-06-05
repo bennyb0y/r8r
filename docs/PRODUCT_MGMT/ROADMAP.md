@@ -1,25 +1,29 @@
-# Burrito Rater Public Roadmap
+# R8R Platform Public Roadmap
 
-## 🚀 Beta Release (v0.1)
+## 🚀 Multi-Tenant Platform Release (v1.0)
 
-Our Beta release focuses on stability, user experience refinement, and security. Key areas include:
+Our platform release focuses on multi-tenant architecture, tenant management, and scalable infrastructure. Key areas include:
 
-### Core Features
-- [x] User rating submission
-- [x] Map-based visualization
-- [x] List view with filtering
-- [x] Mobile-responsive design
-- [x] Basic search functionality
-- [x] Image upload support
-- [x] USA-only submissions
-- [x] CAPTCHA protection
+### Multi-Tenant Core Features
+- [x] Tenant-aware rating submission
+- [x] Subdomain-based tenant routing (*.r8r.one)
+- [x] Tenant-specific map visualization
+- [x] Tenant-isolated data filtering
+- [x] Multi-tenant responsive design
+- [x] Tenant-configurable search functionality
+- [x] Tenant-specific image upload and storage
+- [x] Global and tenant-specific location validation
+- [x] Tenant-aware CAPTCHA protection
 
-### Administration Features
-- [x] Admin authentication
-- [x] Rating moderation system
-- [x] Bulk operations
-- [x] Real-time updates
-- [x] Enhanced backup system
+### Platform Administration Features
+- [x] Multi-tenant admin authentication
+- [x] Tenant-isolated rating moderation
+- [x] Cross-tenant bulk operations
+- [x] Real-time tenant updates
+- [x] Platform-wide backup system
+- [x] Tenant creation and management
+- [x] Platform admin dashboard
+- [x] Tenant-specific analytics
   - [x] Automated daily backups
   - [x] Manual backup triggers
   - [x] Detailed backup statistics
@@ -50,9 +54,9 @@ Our Beta release focuses on stability, user experience refinement, and security.
 - [x] USA location validation
 - [x] Secure backup storage
 
-## 🌮 Version 1.0
+## 🚀 Platform Enhancement (v2.0)
 
-Our full release will expand on the Beta with richer features:
+Our enhancement release will expand the platform with advanced multi-tenant features:
 
 ### Enhanced Security
 - [ ] Complete Zero Trust implementation
@@ -66,24 +70,24 @@ Our full release will expand on the Beta with richer features:
   - [ ] Access pattern analysis
   - [ ] Security alert configuration
 
-### User Experience
-- [ ] Restaurant profiles with aggregated ratings
-- [ ] Social sharing functionality
-- [ ] User profiles with rating history
-- [ ] "Favorite burritos" collection
-- [ ] Advanced filtering and search capabilities
-- [ ] Offline support for frequent users
-- [ ] Enhanced Map Discovery
-  - [ ] Display unrated burrito locations on map
-  - [ ] Integrate with restaurant databases
-  - [ ] Add location verification system
-  - [ ] Implement location suggestions
-  - [ ] Add "Add to Try List" feature
-  - [ ] Show location popularity indicators
-  - [ ] Add location details preview
-  - [ ] Implement location filtering options
-  - [ ] Add location contribution guidelines
-  - [ ] Create location verification workflow
+### Enhanced Tenant Experience
+- [ ] Tenant-customizable item profiles with aggregated ratings
+- [ ] Tenant-branded social sharing functionality
+- [ ] Cross-tenant user profiles with rating history
+- [ ] Tenant-specific "Favorites" collections
+- [ ] Advanced tenant-aware filtering and search
+- [ ] Offline support for tenant-specific data
+- [ ] Enhanced Multi-Tenant Discovery
+  - [ ] Display unrated items on tenant-specific maps
+  - [ ] Integrate with tenant-configurable databases
+  - [ ] Add tenant-aware location verification
+  - [ ] Implement tenant-specific location suggestions
+  - [ ] Add tenant-customizable "Try List" features
+  - [ ] Show tenant-specific popularity indicators
+  - [ ] Add tenant-branded location details
+  - [ ] Implement tenant-aware filtering options
+  - [ ] Add tenant-specific contribution guidelines
+  - [ ] Create tenant-configurable verification workflows
 
 ### Administration
 - [ ] Enhanced analytics
@@ -95,22 +99,25 @@ Our full release will expand on the Beta with richer features:
   - [ ] Activity logging
   - [ ] Change history
 
-### Community Features
-- [ ] Comments and discussions
-- [ ] Rating statistics and trends
-- [ ] Weekly "Top Burrito" highlights
-- [ ] Email notifications for new ratings
-- [ ] Local burrito events calendar
+### Tenant Community Features
+- [ ] Tenant-specific comments and discussions
+- [ ] Tenant-isolated rating statistics and trends
+- [ ] Weekly tenant-customizable highlights ("Top Pizza", "Best Coffee", etc.)
+- [ ] Tenant-branded email notifications
+- [ ] Tenant-specific local events calendar
 
-## 🔮 Future Vision (Beyond 1.0)
+## 🔮 Future Platform Vision (Beyond 2.0)
 
 Looking further ahead, we're exploring:
 
-- [ ] Burrito recommendation engine
-- [ ] Achievement system for active users
-- [ ] Local burrito events and meetups
-- [ ] Restaurant partnership program
-- [ ] International expansion capabilities
+- [ ] AI-powered tenant-specific recommendation engines
+- [ ] Tenant-customizable achievement systems
+- [ ] Platform-wide event management system
+- [ ] Multi-tenant partnership marketplace
+- [ ] Global platform expansion with localization
+- [ ] White-label platform offerings
+- [ ] Advanced tenant analytics and insights
+- [ ] Platform API for third-party integrations
 
 ## 📝 Feedback
 

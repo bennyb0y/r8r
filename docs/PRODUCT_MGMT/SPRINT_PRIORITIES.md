@@ -1,54 +1,54 @@
-# Burrito Rater Sprint Priorities
+# R8R Platform Sprint Priorities
 
 This document tracks immediate priorities and tasks for the next 2-4 weeks. For long-term planning and feature roadmap, see [ROADMAP.md](./ROADMAP.md).
 
 ## 🎯 Current Sprint Focus (Next 2 Weeks)
 
-### Critical Bugs
-1. **Image Upload Path Issue** (#018)
-   - Fix database storage format
-   - Update URL construction
-   - Test image display and downloads
+### Critical Multi-Tenant Issues
+1. **Multi-Tenant Image Upload Path Issue** (#018)
+   - Fix tenant-aware database storage format
+   - Update tenant-specific URL construction
+   - Test image display and downloads across tenants
 
-2. **Cloudflare Turnstile CAPTCHA Styling** (#019)
-   - Remove custom styling
-   - Implement default Cloudflare appearance
-   - Test across different devices
+2. **Tenant-Aware CAPTCHA Configuration** (#019)
+   - Implement tenant-specific CAPTCHA configurations
+   - Add tenant branding support
+   - Test across different tenant configurations
 
-### High Priority Features
-1. **Admin Dashboard Summary**
-   - Implement key metrics display
-   - Add quick action buttons
-   - Create status indicators
-   - Display recent activity
+### High Priority Platform Features
+1. **Platform Admin Dashboard**
+   - Implement cross-tenant metrics display
+   - Add tenant management quick actions
+   - Create platform health indicators
+   - Display tenant activity summaries
 
-2. **Mobile Map Experience**
-   - Evaluate map library options
-   - Implement touch-optimized controls
-   - Improve marker interaction
-   - Add mobile-specific features
+2. **Multi-Tenant Mobile Experience**
+   - Evaluate tenant-aware map library options
+   - Implement touch-optimized tenant controls
+   - Improve tenant-specific marker interaction
+   - Add tenant-branded mobile features
 
-### Performance Improvements
-1. **Frontend Optimization**
-   - Track and optimize map performance
-   - Monitor image loading times
-   - Optimize bundle sizes
-   - Implement performance monitoring
+### Platform Performance Improvements
+1. **Multi-Tenant Frontend Optimization**
+   - Track and optimize tenant-specific map performance
+   - Monitor cross-tenant image loading times
+   - Optimize tenant-aware bundle sizes
+   - Implement platform-wide performance monitoring
 
-2. **Backend Optimization**
-   - Implement rate limiting
-   - Enhance error logging
-   - Monitor API performance
-   - Improve error handling
+2. **Platform Backend Optimization**
+   - Implement tenant-aware rate limiting
+   - Enhance tenant-isolated error logging
+   - Monitor multi-tenant API performance
+   - Improve cross-tenant error handling
 
 ## 📊 Sprint Metrics
 - Sprint Duration: 2 weeks
 - Team Focus: Bug fixes and critical features
 - Key Deliverables: 
-  - Fixed image upload paths
-  - Standardized CAPTCHA styling
-  - Enhanced admin dashboard
-  - Improved mobile map experience
+  - Fixed multi-tenant image upload paths
+  - Tenant-aware CAPTCHA configurations
+  - Enhanced platform admin dashboard
+  - Improved multi-tenant mobile experience
 
 ## 🔄 Daily Updates
 This document is updated daily to reflect current priorities and progress. For completed items, see [ROADMAP.md](./ROADMAP.md).

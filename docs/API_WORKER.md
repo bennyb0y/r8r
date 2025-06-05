@@ -16,7 +16,8 @@ The R8R Platform API is implemented as a Cloudflare Worker that handles all data
 
 ### File Structure
 - **`api/worker.js`**: Main worker script with multi-tenant routing
-- **`wrangler.worker.toml`**: Worker deployment configuration
+- **`wrangler.worker.toml`**: Worker deployment configuration (r8r-platform-api)
+- **`routing-worker.js`**: Wildcard subdomain routing worker
 - **`app/types/platform.ts`**: TypeScript definitions for API contracts
 
 ## Multi-Tenant API Endpoints

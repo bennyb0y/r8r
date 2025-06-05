@@ -23,9 +23,26 @@ export default {
       return await fetch(modifiedRequest);
     }
     
+    // Handle API subdomain (route to API worker)
+    if (hostname === 'api.r8r.one') {
+      console.log(`Routing API request to r8r-platform-api worker`);
+      
+      // Route to API worker
+      const workerUrl = new URL(request.url);
+      workerUrl.hostname = 'r8r-platform-api.bennyfischer.workers.dev';
+      
+      const modifiedRequest = new Request(workerUrl.toString(), {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+      });
+      
+      return await fetch(modifiedRequest);
+    }
+    
     // Handle subdomains (tenant-specific sites)
     const subdomain = hostname.split('.')[0];
-    if (hostname.endsWith('.r8r.one') && subdomain !== 'www') {
+    if (hostname.endsWith('.r8r.one') && subdomain !== 'www' && subdomain !== 'api') {
       console.log(`Routing subdomain: ${subdomain}`);
       
       // Route to Pages deployment but preserve the original hostname

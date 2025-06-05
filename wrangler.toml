@@ -1,9 +1,9 @@
-name = "burrito-rater"
-compatibility_date = "2023-09-01"
+name = "r8r-platform"
+compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "dist"
+pages_build_output_dir = "out"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "your-database-name"
+database_name = "r8r-platform-db"
 database_id = "0e87da0b-9043-44f4-8782-3ee0c9fd6553" 
