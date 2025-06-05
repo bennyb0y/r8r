@@ -226,11 +226,58 @@ const workerHandler = {
         // Handle ratings endpoint
         if (path === 'ratings') {
           if (request.method === 'GET') {
-            // Get all ratings
-            const { results } = await env.DB.prepare(
-              'SELECT * FROM Rating ORDER BY createdAt DESC'
-            ).all();
-            return jsonResponse(results);
+            // Get all ratings using new multi-tenant schema
+            // Default to 'burritos' tenant for backward compatibility
+            const { results } = await env.DB.prepare(`
+              SELECT 
+                r.*,
+                i.name as item_name,
+                i.venue_name,
+                i.latitude,
+                i.longitude,
+                i.zipcode
+              FROM ratings r
+              JOIN items i ON r.item_id = i.id
+              WHERE r.tenant_id = 'burritos' AND r.status = 'confirmed'
+              ORDER BY r.created_at DESC
+            `).all();
+            
+            // Transform to legacy format
+            const legacyResults = results.map(row => {
+              const scores = JSON.parse(row.scores || '{}');
+              const reviewerInfo = JSON.parse(row.reviewer_info || '{}');
+              const ingredients = reviewerInfo.ingredients || [];
+              
+              return {
+                id: parseInt(row.id.replace('rating_', '')),
+                createdAt: row.created_at,
+                updatedAt: row.updated_at,
+                restaurantName: row.venue_name,
+                burritoTitle: row.item_name,
+                latitude: row.latitude,
+                longitude: row.longitude,
+                zipcode: row.zipcode,
+                rating: scores.overall || 3,
+                taste: scores.taste || 3,
+                value: scores.value || 3,
+                price: row.price_paid || 0,
+                hasPotatoes: ingredients.includes('potatoes'),
+                hasCheese: ingredients.includes('cheese'),
+                hasBacon: ingredients.includes('bacon'),
+                hasChorizo: ingredients.includes('chorizo'),
+                hasAvocado: ingredients.includes('avocado'),
+                hasVegetables: ingredients.includes('vegetables'),
+                review: row.review,
+                reviewerName: reviewerInfo.name,
+                identityPassword: reviewerInfo.identity_hash,
+                generatedEmoji: reviewerInfo.emoji,
+                reviewerEmoji: reviewerInfo.emoji,
+                confirmed: row.status === 'confirmed' ? 1 : 0,
+                image: reviewerInfo.image_filename
+              };
+            });
+            
+            return jsonResponse(legacyResults);
           }
           
           if (request.method === 'POST') {
@@ -276,52 +323,12 @@ const workerHandler = {
                 image: data.image
               });
 
-              const { success } = await env.DB.prepare(`
-                INSERT INTO Rating (
-                  createdAt, updatedAt,
-                  latitude, longitude, burritoTitle, rating, taste, value, price,
-                  restaurantName, review, reviewerName, reviewerEmoji,
-                  hasPotatoes, hasCheese, hasBacon, hasChorizo, hasAvocado, hasVegetables,
-                  confirmed, image
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `).bind(
-                now, now,
-                data.latitude,
-                data.longitude,
-                data.burritoTitle,
-                data.rating,
-                data.taste,
-                data.value,
-                data.price,
-                data.restaurantName,
-                data.review || null,
-                data.reviewerName || 'Anonymous',
-                data.reviewerEmoji || null,
-                data.hasPotatoes ? 1 : 0,
-                data.hasCheese ? 1 : 0,
-                data.hasBacon ? 1 : 0,
-                data.hasChorizo ? 1 : 0,
-                data.hasAvocado ? 1 : 0,
-                data.hasVegetables ? 1 : 0,
-                0, // Default to unconfirmed
-                data.image || null // Add the image URL
-              ).run();
-              
-              console.log('Insert result:', { success });
-              
-              if (success) {
-                return jsonResponse({ message: 'Rating submitted successfully' });
-              } else {
-                console.error('Failed to insert rating - no success returned');
-                return errorResponse('Failed to submit rating', 500);
-              }
+              // TODO: Multi-tenant rating creation requires complex item management
+              // For now, return error to prevent data corruption
+              return errorResponse('Rating creation temporarily disabled during migration', 503);
             } catch (error) {
-              console.error('Error inserting rating:', {
-                message: error.message,
-                stack: error.stack,
-                cause: error.cause
-              });
-              return errorResponse(`Failed to submit rating: ${error.message}`, 500);
+              console.error('Error in POST handler:', error);
+              return errorResponse('Rating creation not available', 503);
             }
           }
         }
@@ -332,10 +339,13 @@ const workerHandler = {
           const id = parseInt(ratingMatch[1]);
           const action = ratingMatch[2]?.replace('/', '') || '';
           
-          // Verify the rating exists
-          const rating = await env.DB.prepare('SELECT * FROM Rating WHERE id = ?')
-            .bind(id)
-            .first();
+          // Verify the rating exists (using new schema)
+          const rating = await env.DB.prepare(`
+            SELECT r.*, i.name as item_name, i.venue_name, i.latitude, i.longitude, i.zipcode
+            FROM ratings r
+            JOIN items i ON r.item_id = i.id
+            WHERE r.tenant_id = 'burritos' AND r.id = ?
+          `).bind(`rating_${id}`).first();
             
           if (!rating) {
             return errorResponse('Rating not found', 404);
@@ -343,8 +353,8 @@ const workerHandler = {
 
           // Handle DELETE request
           if (request.method === 'DELETE' && !action) {
-            const result = await env.DB.prepare('DELETE FROM Rating WHERE id = ?')
-              .bind(id)
+            const result = await env.DB.prepare('DELETE FROM ratings WHERE tenant_id = ? AND id = ?')
+              .bind('burritos', `rating_${id}`)
               .run();
               
             if (result.success) {
@@ -356,8 +366,8 @@ const workerHandler = {
 
           // Handle confirmation
           if (request.method === 'PUT' && action === 'confirm') {
-            const result = await env.DB.prepare('UPDATE Rating SET confirmed = 1 WHERE id = ?')
-              .bind(id)
+            const result = await env.DB.prepare('UPDATE ratings SET status = ? WHERE tenant_id = ? AND id = ?')
+              .bind('confirmed', 'burritos', `rating_${id}`)
               .run();
               
             if (result.success) {
@@ -376,9 +386,11 @@ const workerHandler = {
             return errorResponse('Invalid or empty ID list', 400);
           }
           
-          const placeholders = ids.map(() => '?').join(',');
-          const result = await env.DB.prepare(`UPDATE Rating SET confirmed = 1 WHERE id IN (${placeholders})`)
-            .bind(...ids)
+          // Convert legacy IDs to new format and update with tenant context
+          const ratingIds = ids.map(id => `rating_${id}`);
+          const placeholders = ratingIds.map(() => '?').join(',');
+          const result = await env.DB.prepare(`UPDATE ratings SET status = 'confirmed' WHERE tenant_id = 'burritos' AND id IN (${placeholders})`)
+            .bind(...ratingIds)
             .run();
             
           if (result.success) {
