@@ -1,4 +1,4 @@
-name = "burrito-backup-worker"
+name = "r8r-backup-worker"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 account_id = "4467ef47f4344bb87ee9fc681c6ca144"
@@ -9,9 +9,9 @@ crons = ["0 0 * * *"]
 
 [[d1_databases]]
 binding = "DB"
-database_name = "burrito-rater-db"
-database_id = "0e87da0b-9043-44f4-8782-3ee0c9fd6553"
+database_name = "r8r-platform-db"
+database_id = "e278441a-734f-46b6-ac48-72d2d02c6cbc"
 
 [[r2_buckets]]
 binding = "BACKUP_BUCKET"
-bucket_name = "burrito-backup" 
+bucket_name = "r8r-backups" 

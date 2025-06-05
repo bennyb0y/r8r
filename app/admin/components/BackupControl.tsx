@@ -53,7 +53,7 @@ export default function BackupControl() {
       setError(null);
       setResult(null);
 
-      const response = await fetch('https://burrito-backup-worker.bennyfischer.workers.dev', {
+      const response = await fetch('https://r8r-backup-worker.bennyfischer.workers.dev', {
         method: 'GET',
         headers: {
           'Accept': 'application/json',

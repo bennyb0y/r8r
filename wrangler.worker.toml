@@ -6,7 +6,7 @@ main = "api/worker.js"
 [[d1_databases]]
 binding = "DB"
 database_name = "r8r-platform-db"
-database_id = "0e87da0b-9043-44f4-8782-3ee0c9fd6553" 
+database_id = "e278441a-734f-46b6-ac48-72d2d02c6cbc" 
 
 [[r2_buckets]]
 binding = "BUCKET"

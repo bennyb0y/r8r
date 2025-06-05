@@ -3,7 +3,7 @@
 // API configuration
 export const getApiUrl = (endpoint) => {
   // Use the environment variable for the API base URL
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://burrito-rater.bennyfischer.workers.dev';
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://r8r-platform-api.bennyfischer.workers.dev';
   
   console.log(`Using API base URL: ${baseUrl}`);
   

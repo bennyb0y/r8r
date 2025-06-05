@@ -28,7 +28,7 @@ export default function RecentBackups() {
 
   const fetchRecentBackups = async () => {
     try {
-      const response = await fetch('https://burrito-backup-worker.bennyfischer.workers.dev/list');
+      const response = await fetch('https://r8r-backup-worker.bennyfischer.workers.dev/list');
       const data = await response.json();
       setBackups(data.backups);
     } catch (err) {

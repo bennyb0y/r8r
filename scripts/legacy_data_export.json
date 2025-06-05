@@ -1,0 +1,15 @@
+
+ ⛅️ wrangler 4.19.1
+───────────────────
+🌀 Executing on remote database burrito-rater-db (0e87da0b-9043-44f4-8782-3ee0c9fd6553):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+Note: if the execution fails to complete, your DB will return to its original state and you can safely retry.
+├ Checking if file needs uploading
+│
+├ 🌀 Uploading 0e87da0b-9043-44f4-8782-3ee0c9fd6553.c34dafc44dfacfd8.sql
+│ 🌀 Uploading complete.
+│
+
+[32mIf you think this is a bug then please create an issue at https://github.com/cloudflare/workers-sdk/issues/new/choose[0m
+? Would you like to report this error to Cloudflare? Wrangler's output and the error details will be shared with the Wrangler team to help us diagnose and fix the issue.
+🤖 Using fallback value in non-interactive context: no
