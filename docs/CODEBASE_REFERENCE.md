@@ -21,14 +21,15 @@ r8r/
 ├── app/               # Multi-tenant Next.js application
 │   ├── types/        # Platform TypeScript definitions
 │   │   └── platform.ts # Multi-tenant types and interfaces
-├── api/               # Cloudflare Worker API code (legacy)
+├── api/               # Cloudflare Worker API code (r8r-platform-api)
 ├── docs/              # Platform documentation
 │   ├── MULTITENANT_SCHEMA.md # Database architecture
 │   ├── PLATFORM_ADMIN_GUIDE.md # Admin operations
 │   └── ...
-├── scripts/          # Platform management scripts
+├── scripts/          # Platform management and migration scripts
 │   ├── create_multitenant_schema.sql # Database setup
-│   ├── migrate_burrito_data.sql # Legacy data migration
+│   ├── migrate_to_new_schema.js # Legacy data migration (completed)
+│   ├── new_schema_migration.sql # Migration SQL statements
 │   └── ...
 ├── public/           # Static assets
 └── .env.local       # Environment variables (not in git)

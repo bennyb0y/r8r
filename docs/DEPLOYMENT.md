@@ -39,8 +39,8 @@ Create a `.env.local` file in the project root:
 # Cloudflare Configuration
 CLOUDFLARE_ACCOUNT_ID=your_account_id
 
-# API Configuration (for production APIs when available)
-NEXT_PUBLIC_API_BASE_URL=https://your-worker-name.your-account.workers.dev
+# API Configuration
+NEXT_PUBLIC_API_BASE_URL=https://r8r-platform-api.bennyfischer.workers.dev
 
 # Google Maps API Key
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
@@ -442,6 +442,46 @@ npm run deploy:app
 - Efficient multi-tenant queries
 - Proper indexing for tenant_id
 - Query result caching
+
+## Database Migration
+
+The platform includes complete migration from legacy single-tenant to multi-tenant schema:
+
+### Legacy Data Migration (Completed)
+The following migration has been completed and all legacy data is now in the new multi-tenant schema:
+
+- **42 legacy burrito ratings** migrated from `burrito-rater-db` to `r8r-platform-db`
+- **All legacy data isolated** to `burritos` tenant accessible at `burritos.r8r.one`
+- **New multi-tenant schema** with normalized relationships and JSON flexibility
+- **Backward compatibility** maintained through transformation layer
+
+### Migration Scripts
+```bash
+# Migration scripts available for reference:
+scripts/migrate_to_new_schema.js        # Main migration logic
+scripts/new_schema_migration.sql        # SQL migration statements  
+scripts/legacy_data_export.json         # Exported legacy data
+
+# Verification commands:
+npx wrangler d1 execute r8r-platform-db --remote --command="SELECT COUNT(*) FROM tenants;"
+npx wrangler d1 execute r8r-platform-db --remote --command="SELECT COUNT(*) FROM ratings WHERE tenant_id = 'burritos';"
+```
+
+### Running New Migrations
+```bash
+# Run new migrations against D1 database
+npx wrangler d1 execute r8r-platform-db --remote --file=scripts/new_migration.sql
+
+# Verify migration results
+npx wrangler d1 execute r8r-platform-db --remote --command="SELECT COUNT(*) FROM ratings;"
+```
+
+### Migration Architecture
+The new schema provides:
+- **Tenant isolation**: Complete data separation between tenants
+- **Normalized relationships**: Items and ratings properly linked
+- **JSON flexibility**: Extensible configurations and data structures
+- **Legacy compatibility**: Existing APIs continue to work unchanged
 
 ## Maintenance
 

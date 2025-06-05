@@ -46,7 +46,7 @@ The R8R platform is a serverless, multi-tenant rating system built entirely on C
                                     ▼ (API Calls)
 ┌─────────────────────────────────────────────────────────────────┐
 │              Cloudflare Workers (API)                          │
-│                   burrito-rater                                │
+│                 r8r-platform-api                              │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  API Endpoints:                                         │   │
 │  │  • /api/ratings (CRUD operations)                       │   │
@@ -157,48 +157,93 @@ export function resolveTenantFromHost(host: string): string | null {
 
 **Tenant Isolation**:
 ```javascript
-// All queries include tenant_id filter
-const ratings = await env.DB.prepare(`
-  SELECT * FROM ratings 
-  WHERE tenant_id = ? 
-  ORDER BY created_at DESC
+// Multi-table queries with strict tenant isolation
+const ratingsWithItems = await env.DB.prepare(`
+  SELECT r.*, i.name as item_name, i.venue_name, i.latitude, i.longitude
+  FROM ratings r
+  JOIN items i ON r.item_id = i.id
+  WHERE r.tenant_id = ? AND r.status = 'confirmed'
+  ORDER BY r.created_at DESC
 `).bind(tenantId).all();
+
+// Tenant configuration retrieval
+const tenant = await env.DB.prepare(`
+  SELECT * FROM tenants WHERE subdomain = ?
+`).bind(subdomain).first();
 ```
 
 ### 4. Data Layer
 
 #### Cloudflare D1 (Database)
-**Schema**: Multi-tenant with strict isolation
+**Schema**: Advanced multi-tenant with normalized relationships
 ```sql
-CREATE TABLE ratings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  tenant_id TEXT NOT NULL,
-  title TEXT NOT NULL,
-  restaurant TEXT NOT NULL,
-  rating REAL NOT NULL,
-  taste REAL,
-  value REAL,
-  price REAL,
-  ingredients TEXT,
-  image_url TEXT,
+-- Tenants table for platform management
+CREATE TABLE tenants (
+  id TEXT PRIMARY KEY,
+  subdomain TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  subcategory TEXT,
+  owner_email TEXT,
+  status TEXT NOT NULL DEFAULT 'active',
+  config JSON NOT NULL,
+  branding JSON,
+  settings JSON,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Items table for rated entities (restaurants, products, etc.)
+CREATE TABLE items (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL REFERENCES tenants(id),
+  name TEXT NOT NULL,
+  venue_name TEXT NOT NULL,
+  venue_address TEXT,
   latitude REAL,
   longitude REAL,
   zipcode TEXT,
-  reviewer_name TEXT,
-  reviewer_emoji TEXT,
-  identity_password TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  price_range_min REAL,
+  price_range_max REAL,
+  attributes JSON,
+  image_urls JSON,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_by TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Ratings table with normalized structure
+CREATE TABLE ratings (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL REFERENCES tenants(id),
+  item_id TEXT NOT NULL REFERENCES items(id),
+  scores JSON NOT NULL,
+  review TEXT,
+  price_paid REAL,
+  reviewer_info JSON,
+  visit_date DATE,
+  image_urls JSON,
+  status TEXT NOT NULL DEFAULT 'pending',
+  confirmed_at TIMESTAMP,
+  confirmed_by TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for performance
+CREATE INDEX idx_tenants_subdomain ON tenants(subdomain);
+CREATE INDEX idx_items_tenant_id ON items(tenant_id);
 CREATE INDEX idx_ratings_tenant_id ON ratings(tenant_id);
+CREATE INDEX idx_ratings_item_id ON ratings(item_id);
 CREATE INDEX idx_ratings_created_at ON ratings(created_at);
 ```
 
 #### Cloudflare R2 (Storage)
-**Purpose**: Store user-uploaded images
-**Bucket**: `burrito-rater-bucket`
+**Purpose**: Store user-uploaded images and tenant assets
+**Bucket**: `r8r-images`
 **Access**: Via signed URLs from Worker API
+**Structure**: Tenant-isolated paths (`/{tenant_id}/images/`)
 
 ## Deployment Architecture
 
@@ -243,10 +288,41 @@ Target: [Worker routes handle this]
 3. Routes to Pages with tenant context
 4. Frontend detects tenant "new-tenant"
 5. Uses default configuration for new tenant
-6. Tenant is auto-created on first rating submission
+6. Tenant data isolated from all other tenants
+7. Legacy data migrated to 'burritos' tenant only
 ```
 
-### 2. Tenant Configuration
+### 2. Legacy Data Migration
+
+The platform includes a complete migration from the original single-tenant system:
+
+**Migration Summary**:
+- 42 legacy burrito ratings migrated from `burrito-rater-db`
+- All legacy data isolated to `burritos` tenant
+- Available exclusively at `burritos.r8r.one`
+- Backward compatibility maintained for existing APIs
+- New multi-tenant schema supports unlimited tenants
+
+**Migration Process**:
+```sql
+-- Legacy data transformed and inserted into new schema
+INSERT INTO tenants (id, subdomain, name, category, config) 
+VALUES ('burritos', 'burritos', 'Burrito Reviews', 'food', {...});
+
+-- Items created from unique restaurant/burrito combinations  
+INSERT INTO items (tenant_id, name, venue_name, latitude, longitude)
+SELECT 'burritos', burritoTitle, restaurantName, latitude, longitude
+FROM legacy_ratings;
+
+-- Ratings normalized with JSON scores and reviewer info
+INSERT INTO ratings (tenant_id, item_id, scores, reviewer_info)
+SELECT 'burritos', item_id, 
+       JSON_OBJECT('taste', taste, 'value', value, 'overall', rating),
+       JSON_OBJECT('name', reviewerName, 'emoji', reviewerEmoji)
+FROM legacy_ratings;
+```
+
+### 3. Tenant Configuration
 
 **Default Configurations** (`lib/tenant.ts`):
 ```typescript
@@ -266,7 +342,7 @@ export const DEFAULT_TENANT_CONFIGS = {
 };
 ```
 
-### 3. Tenant Data Isolation
+### 4. Tenant Data Isolation
 
 **Database Level**:
 - All queries filtered by `tenant_id`

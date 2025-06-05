@@ -278,6 +278,67 @@ const newAdmin = {
 
 ## Platform Administration
 
+### Legacy Data Migration Verification
+
+The platform has completed migration from the legacy single-tenant system. Use these commands to verify migration integrity:
+
+#### 1. Verify Migration Completeness
+```bash
+# Check tenant creation
+npx wrangler d1 execute r8r-platform-db --remote --command="
+SELECT id, subdomain, name, category, status 
+FROM tenants WHERE id = 'burritos';"
+
+# Verify legacy data migration
+npx wrangler d1 execute r8r-platform-db --remote --command="
+SELECT COUNT(*) as migrated_ratings 
+FROM ratings WHERE tenant_id = 'burritos';"
+
+# Should return 42 ratings
+npx wrangler d1 execute r8r-platform-db --remote --command="
+SELECT COUNT(*) as total_items 
+FROM items WHERE tenant_id = 'burritos';"
+
+# Should return 36 unique items
+```
+
+#### 2. Verify Data Integrity
+```bash
+# Check rating-item relationships
+npx wrangler d1 execute r8r-platform-db --remote --command="
+SELECT COUNT(*) as orphaned_ratings 
+FROM ratings r 
+LEFT JOIN items i ON r.item_id = i.id 
+WHERE i.id IS NULL AND r.tenant_id = 'burritos';"
+
+# Should return 0 orphaned ratings
+
+# Verify tenant isolation
+npx wrangler d1 execute r8r-platform-db --remote --command="
+SELECT DISTINCT tenant_id FROM ratings;"
+
+# Should only show 'burritos' tenant
+```
+
+#### 3. Test Legacy API Compatibility
+```bash
+# Test legacy rating retrieval
+curl https://r8r-platform-api.bennyfischer.workers.dev/api/ratings
+
+# Verify legacy format transformation
+curl https://r8r-platform-api.bennyfischer.workers.dev/api/ratings | jq '.[0] | keys'
+
+# Should include legacy fields: restaurantName, burritoTitle, hasPotatoes, etc.
+```
+
+#### 4. Verify Burritos Tenant Access
+```bash
+# Test subdomain routing
+curl -H "Host: burritos.r8r.one" https://r8r-platform.pages.dev
+
+# Should show burrito-specific interface
+```
+
 ### Platform-Wide Operations
 
 #### 1. Tenant Analytics Dashboard
