@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Simple configuration for static export
+  // Configuration for Cloudflare Pages with static export
   images: {
     unoptimized: true,
   },
@@ -8,12 +8,18 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Use static export for Cloudflare Pages
+  // Use static export for Cloudflare Pages compatibility
   output: 'export',
-  // Disable optimizations that might cause issues
+  // Simplify build
   experimental: {
     optimizeCss: false,
   },
+  // Exclude API worker files from build
+  exclude: [
+    'api/**',
+    'routing-worker.js',
+    'wrangler*.toml'
+  ],
 };
 
 module.exports = nextConfig; 
