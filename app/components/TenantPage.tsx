@@ -65,8 +65,21 @@ export default function TenantPage({ tenantId }: TenantPageProps) {
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'list' | 'map'>('list');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const config = TENANT_CONFIGS[tenantId as keyof typeof TENANT_CONFIGS] || TENANT_CONFIGS.default;
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const fetchRatings = async () => {
@@ -130,82 +143,302 @@ export default function TenantPage({ tenantId }: TenantPageProps) {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: config.bgColor }}>
-      <div style={{ maxWidth: '96rem', margin: '0 auto', padding: '2rem 1rem' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: config.primaryColor, marginBottom: '0.5rem' }}>
-            {config.emoji} {config.name}
-          </h1>
-          <p style={{ fontSize: '1.25rem', color: config.secondaryColor, marginBottom: '1rem' }}>
-            Discover the best {config.itemNamePlural} in your area
-          </p>
-          <div style={{ fontSize: '1.125rem', fontWeight: '600', color: config.accentColor }}>
-            {ratings.length} reviews found
+      {/* Mobile Top Navigation */}
+      {isMobile && (
+        <div style={{ 
+          backgroundColor: 'white',
+          borderBottom: `1px solid ${config.bgColor}`,
+          padding: '1rem'
+        }}>
+          {/* Header */}
+          <div style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '1rem'
+          }}>
+            <div>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: config.primaryColor, margin: 0 }}>
+                {config.emoji} {config.name}
+              </h1>
+              <p style={{ fontSize: '0.875rem', color: config.secondaryColor, margin: 0 }}>
+                {ratings.length} reviews found
+              </p>
+            </div>
+            <a 
+              href="https://r8r.one" 
+              style={{ 
+                color: config.accentColor, 
+                textDecoration: 'none', 
+                fontSize: '0.875rem'
+              }}
+            >
+              ← R8R
+            </a>
+          </div>
+
+          {/* View Toggle Buttons */}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setCurrentView('list')}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0.75rem',
+                backgroundColor: currentView === 'list' ? config.accentColor : config.bgColor,
+                color: currentView === 'list' ? 'white' : config.secondaryColor,
+                border: 'none',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '600'
+              }}
+            >
+              <span style={{ marginRight: '0.5rem' }}>📋</span>
+              List
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('map')}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0.75rem',
+                backgroundColor: currentView === 'map' ? config.accentColor : config.bgColor,
+                color: currentView === 'map' ? 'white' : config.secondaryColor,
+                border: 'none',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '600'
+              }}
+            >
+              <span style={{ marginRight: '0.5rem' }}>🗺️</span>
+              Map
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Reviews List */}
-        {ratings.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>{config.emoji}</div>
-            <div style={{ fontSize: '1.25rem', color: '#6b7280' }}>No reviews yet</div>
-            <div style={{ color: '#9ca3af', marginTop: '0.5rem' }}>Be the first to review a {config.itemName}!</div>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-            {ratings.map((rating) => (
-              <div
-                key={rating.id}
+      <div style={{ display: 'flex', minHeight: isMobile ? 'auto' : '100vh' }}>
+        {/* Desktop Sidebar Navigation */}
+        {!isMobile && (
+          <div style={{ 
+            width: '280px',
+            backgroundColor: 'white', 
+            borderRight: `1px solid ${config.bgColor}`,
+            padding: '2rem 1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'sticky',
+            top: 0,
+            height: '100vh'
+          }}>
+            {/* Logo/Header */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: config.primaryColor, marginBottom: '0.5rem' }}>
+                {config.emoji} {config.name}
+              </h1>
+              <p style={{ fontSize: '0.875rem', color: config.secondaryColor }}>
+                {ratings.length} reviews found
+              </p>
+            </div>
+
+            {/* Navigation Menu */}
+            <nav style={{ marginBottom: '2rem' }}>
+              <div style={{ marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: config.secondaryColor, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  View Options
+                </h3>
+              </div>
+              
+              <button
+                onClick={() => setCurrentView('list')}
                 style={{
-                  backgroundColor: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  marginBottom: '0.5rem',
+                  backgroundColor: currentView === 'list' ? config.bgColor : 'transparent',
+                  color: currentView === 'list' ? config.primaryColor : config.secondaryColor,
+                  border: 'none',
                   borderRadius: '0.5rem',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  padding: '1.5rem',
-                  border: `1px solid ${config.bgColor}`,
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: currentView === 'list' ? '600' : '400',
+                  textAlign: 'left'
                 }}
               >
-                <div style={{ marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.25rem' }}>
-                    {rating.restaurantName}
-                  </h3>
-                  <p style={{ color: '#6b7280' }}>{rating.burritoTitle}</p>
-                </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: config.accentColor }}>
-                      {rating.rating}
-                    </span>
-                    <span style={{ fontSize: '0.875rem', color: '#6b7280', marginLeft: '0.25rem' }}>/5</span>
-                  </div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#059669' }}>
-                    ${rating.price?.toFixed(2) || '0.00'}
-                  </div>
-                </div>
-                
-                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                  {rating.reviewerName && (
-                    <div>Reviewed by {rating.reviewerName}</div>
-                  )}
-                  {rating.zipcode && (
-                    <div>📍 {rating.zipcode}</div>
-                  )}
-                  {rating.createdAt && (
-                    <div>{new Date(rating.createdAt).toLocaleDateString()}</div>
-                  )}
-                </div>
-              </div>
-            ))}
+                <span style={{ marginRight: '0.75rem', fontSize: '1rem' }}>📋</span>
+                List View
+              </button>
+              
+              <button
+                onClick={() => setCurrentView('map')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  marginBottom: '0.5rem',
+                  backgroundColor: currentView === 'map' ? config.bgColor : 'transparent',
+                  color: currentView === 'map' ? config.primaryColor : config.secondaryColor,
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: currentView === 'map' ? '600' : '400',
+                  textAlign: 'left'
+                }}
+              >
+                <span style={{ marginRight: '0.75rem', fontSize: '1rem' }}>🗺️</span>
+                Map View
+              </button>
+            </nav>
+
+            {/* Back to Platform Link */}
+            <div style={{ marginTop: 'auto', paddingTop: '2rem', borderTop: `1px solid ${config.bgColor}` }}>
+              <a 
+                href="https://r8r.one" 
+                style={{ 
+                  color: config.accentColor, 
+                  textDecoration: 'none', 
+                  fontSize: '0.875rem',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                <span style={{ marginRight: '0.5rem' }}>←</span>
+                Back to R8R Platform
+              </a>
+            </div>
           </div>
         )}
-        
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '3rem', paddingTop: '2rem', borderTop: `1px solid ${config.bgColor}` }}>
-          <p style={{ color: '#6b7280' }}>
-            <a href="https://r8r.one" style={{ color: config.accentColor, textDecoration: 'none' }}>
-              ← Back to R8R Platform
-            </a>
-          </p>
+
+        {/* Main Content Area */}
+        <div style={{ 
+          flex: 1, 
+          padding: isMobile ? '1rem' : '2rem',
+          width: isMobile ? '100%' : 'auto'
+        }}>
+          {/* Desktop Header */}
+          {!isMobile && (
+            <div style={{ marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: config.primaryColor, marginBottom: '0.5rem' }}>
+                Discover the best {config.itemNamePlural} in your area
+              </h2>
+              <p style={{ color: config.secondaryColor }}>
+                {currentView === 'list' ? 'Browse all reviews in a detailed list format' : 'Explore reviews on an interactive map'}
+              </p>
+            </div>
+          )}
+
+          {/* Content based on current view */}
+          {currentView === 'list' ? (
+            // List View
+            ratings.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem' }}>
+                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>{config.emoji}</div>
+                <div style={{ fontSize: '1.25rem', color: '#6b7280' }}>No reviews yet</div>
+                <div style={{ color: '#9ca3af', marginTop: '0.5rem' }}>Be the first to review a {config.itemName}!</div>
+              </div>
+            ) : (
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(350px, 1fr))', 
+                gap: '1.5rem' 
+              }}>
+                {ratings.map((rating) => (
+                  <div
+                    key={rating.id}
+                    style={{
+                      backgroundColor: 'white',
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      padding: '1.5rem',
+                      border: `1px solid ${config.bgColor}`,
+                    }}
+                  >
+                    <div style={{ marginBottom: '1rem' }}>
+                      <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.25rem' }}>
+                        {rating.restaurantName}
+                      </h3>
+                      <p style={{ color: '#6b7280' }}>{rating.burritoTitle}</p>
+                    </div>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: config.accentColor }}>
+                          {rating.rating}
+                        </span>
+                        <span style={{ fontSize: '0.875rem', color: '#6b7280', marginLeft: '0.25rem' }}>/5</span>
+                      </div>
+                      <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#059669' }}>
+                        ${rating.price?.toFixed(2) || '0.00'}
+                      </div>
+                    </div>
+                    
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                      {rating.reviewerName && (
+                        <div>Reviewed by {rating.reviewerName}</div>
+                      )}
+                      {rating.zipcode && (
+                        <div>📍 {rating.zipcode}</div>
+                      )}
+                      {rating.createdAt && (
+                        <div>{new Date(rating.createdAt).toLocaleDateString()}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : (
+            // Map View
+            <div style={{ 
+              backgroundColor: 'white', 
+              borderRadius: isMobile ? '0' : '0.5rem', 
+              padding: isMobile ? '2rem 1rem' : '2rem', 
+              textAlign: 'center',
+              border: isMobile ? 'none' : `1px solid ${config.bgColor}`,
+              minHeight: isMobile ? 'calc(100vh - 200px)' : '500px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'column',
+              width: isMobile ? 'calc(100% + 2rem)' : 'auto',
+              marginLeft: isMobile ? '-1rem' : '0',
+              marginRight: isMobile ? '-1rem' : '0'
+            }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🗺️</div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: config.primaryColor, marginBottom: '0.5rem' }}>
+                Map View Coming Soon
+              </h3>
+              <p style={{ color: config.secondaryColor, marginBottom: '1rem' }}>
+                Interactive map with {config.itemName} locations will be available here
+              </p>
+              <button
+                onClick={() => setCurrentView('list')}
+                style={{
+                  backgroundColor: config.accentColor,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                View as List
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
