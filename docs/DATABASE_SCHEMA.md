@@ -1,18 +1,33 @@
-# Database Schema
+# R8R Platform Database Schema
 
-This document outlines the database schema for the R8R multi-tenant rating platform and serves as the definitive reference for the database structure.
+This document serves as the definitive reference for the R8R multi-tenant rating platform database structure, covering the current schema, migration history, and implementation details.
 
 ## Overview
 
-The R8R platform uses Cloudflare D1, a serverless SQL database that is SQLite-compatible. The schema supports a sophisticated multi-tenant architecture with normalized relationships and JSON storage for flexible data structures.
+The R8R platform uses **Cloudflare D1**, a serverless SQLite-compatible database that supports a sophisticated multi-tenant architecture. The schema enables unlimited self-service tenant creation with complete data isolation and flexible, category-agnostic rating systems.
 
-## Database Migration History
+## Core Design Principles
+
+1. **Universal Rating System**: Supports thumbs up/neutral/down quality ratings and yes/no value ratings
+2. **Tenant Isolation**: Complete data separation between communities (burritos.r8r.one vs burgers.r8r.one)
+3. **Self-Service Creation**: Any subdomain automatically works without manual configuration
+4. **Cross-Category Support**: Works for food, beverages, services, products, or any reviewable items
+5. **Backward Compatibility**: Seamless migration from legacy numeric rating systems
+6. **Performance Optimization**: Tenant-first indexing and proper query patterns
+
+## Database Evolution
 
 ### Legacy Schema (burrito-rater-db)
-The platform was migrated from a single-tenant burrito rating system to a multi-tenant platform. The legacy `Rating` table contained denormalized burrito rating data and has been fully migrated to the new schema.
+- **Single-tenant**: Hardcoded for burrito ratings only
+- **Rigid Structure**: Fixed columns for burrito-specific attributes
+- **Numeric Ratings**: 1-5 scale for taste, value, overall ratings
+- **Status**: Fully migrated to new multi-tenant schema
 
-### Current Schema (r8r-platform-db)
-The new schema supports unlimited tenants with complete data isolation and normalized relationships.
+### Current Schema (r8r-platform-db)  
+- **Multi-tenant**: Unlimited communities with complete isolation
+- **Universal Design**: Generic structure works for any rating category
+- **Thumbs System**: Modern thumbs up/neutral/down quality ratings
+- **Flexible Attributes**: JSON-based storage for category-specific data
 
 ## Tables
 
@@ -56,24 +71,70 @@ CREATE TABLE tenants (
 | created_at   | TIMESTAMP | When the tenant was created                      |
 | updated_at   | TIMESTAMP | When the tenant was last updated                 |
 
-#### Example Config JSON
+#### Example Tenant Configuration JSON
 
+Each tenant can be configured for different rating categories and item types:
+
+**Burritos Tenant Example**:
 ```json
 {
-  "type": "food_rating",
+  "category": "food",
+  "subcategory": "mexican",
+  "ratingSystem": {
+    "quality": {
+      "type": "thumbs",
+      "options": ["up", "neutral", "down"]
+    },
+    "value": {
+      "type": "boolean", 
+      "label": "Good Value"
+    }
+  },
+  "itemAttributes": {
+    "ingredients": {
+      "type": "multiselect",
+      "options": ["cheese", "lettuce", "beans", "rice", "salsa", "avocado"]
+    },
+    "spiceLevel": {
+      "type": "scale",
+      "min": 1,
+      "max": 5
+    }
+  },
   "features": {
     "maps": true,
     "images": true,
-    "reviews": true,
-    "social": false
+    "locationRequired": true,
+    "priceTracking": true
+  }
+}
+```
+
+**Coffee Shop Tenant Example**:
+```json
+{
+  "category": "food", 
+  "subcategory": "beverages",
+  "ratingSystem": {
+    "quality": {
+      "type": "thumbs",
+      "options": ["up", "neutral", "down"]
+    },
+    "value": {
+      "type": "boolean",
+      "label": "Good Value"
+    }
   },
-  "scoring_criteria": [
-    { "name": "taste", "label": "Taste", "scale": 5 },
-    { "name": "value", "label": "Value", "scale": 5 },
-    { "name": "overall", "label": "Overall", "scale": 5 }
-  ],
-  "location_required": true,
-  "price_tracking": true
+  "itemAttributes": {
+    "roastLevel": {
+      "type": "select",
+      "options": ["light", "medium", "dark"]
+    },
+    "milkOptions": {
+      "type": "multiselect", 
+      "options": ["oat", "almond", "soy", "whole", "skim"]
+    }
+  }
 }
 ```
 
@@ -181,14 +242,26 @@ CREATE TABLE ratings (
 | created_at    | TIMESTAMP | When the rating was created                       |
 | updated_at    | TIMESTAMP | When the rating was last updated                  |
 
-#### Example Scores JSON
+#### Current Universal Rating System
+
+The platform now uses a simplified, universal rating system that works across all categories:
+
+**Quality Rating**: Thumbs system instead of numeric scales
+- `up` (👍) - Positive quality rating
+- `neutral` (😐) - Neutral quality rating  
+- `down` (👎) - Negative quality rating
+
+**Value Rating**: Simple binary assessment
+- `true` - Good value for money
+- `false` - Poor value for money
+
+#### Example Current Scores JSON
 
 ```json
 {
-  "taste": 4.5,
-  "value": 3.8,
-  "overall": 4.2,
-  "presentation": 4.0
+  "quality": "up",
+  "value": true,
+  "price": 12.50
 }
 ```
 
@@ -199,10 +272,18 @@ CREATE TABLE ratings (
   "name": "FoodLover123",
   "emoji": "🌯",
   "identity_hash": "abc123...",
-  "ingredients": ["potatoes", "cheese", "avocado", "bacon"],
   "anonymous": false
 }
 ```
+
+#### Legacy Compatibility
+
+For backward compatibility, legacy numeric ratings are automatically converted:
+- Ratings 4-5 → `quality: "up"`
+- Rating 3 → `quality: "neutral"`  
+- Ratings 1-2 → `quality: "down"`
+- Value ratings >3 → `value: true`
+- Value ratings ≤3 → `value: false`
 
 ### tenant_admins
 
@@ -340,47 +421,65 @@ BEGIN
 END;
 ```
 
-## Migration from Legacy Schema
+## Universal Rating System Migration
 
-The platform includes a complete migration from the original single-tenant burrito rating system:
+The platform has evolved from a rigid, category-specific rating system to a universal thumbs-based approach that works across all tenant types.
 
-### Migration Summary
-- **Legacy Database**: `burrito-rater-db` (single Rating table)
-- **New Database**: `r8r-platform-db` (multi-tenant normalized schema)
-- **Data Migrated**: 42 burrito ratings → 1 tenant, 36 items, 42 ratings
-- **Tenant Isolation**: All legacy data isolated to 'burritos' tenant
-- **Backward Compatibility**: Legacy API format maintained through transformation layer
+### Rating System Evolution
 
-### Migration Process
+**Legacy System (Burritos Only)**:
+- Numeric ratings (1-5 scale) for taste, value, overall
+- Burrito-specific fields (ingredients, toppings)
+- Single-tenant burrito database
 
-1. **Data Export**: Legacy ratings exported from `burrito-rater-db`
-2. **Schema Transformation**: Data normalized into new multi-tenant structure
-3. **Tenant Creation**: 'burritos' tenant created with appropriate configuration
-4. **Item Extraction**: Unique restaurant/burrito combinations converted to items
-5. **Rating Normalization**: Individual ratings linked to items with JSON scores
-6. **Verification**: Complete data integrity verification
+**Current Universal System**:
+- Thumbs up/neutral/down for quality assessment
+- Yes/No boolean for value assessment  
+- Generic `itemTitle` field instead of `burritoTitle`
+- Multi-tenant with complete data isolation
+- Cross-category support (food, beverages, services, etc.)
 
-### Legacy Compatibility Layer
+### Migration Strategy
 
-The database interface includes transformation methods to maintain backward compatibility:
+1. **Automatic Conversion**: Legacy numeric ratings automatically convert to thumbs system
+   - Ratings 4-5 → 👍 (up)
+   - Rating 3 → 😐 (neutral)
+   - Ratings 1-2 → 👎 (down)
 
-```typescript
-// Transform new schema data to legacy API format
-private transformRatingForLegacyApi(row: any): LegacyRating {
-  const scores = JSON.parse(row.scores || '{}');
-  const reviewerInfo = JSON.parse(row.reviewer_info || '{}');
-  const ingredients = reviewerInfo.ingredients || [];
-  
-  return {
-    id: parseInt(row.id.replace('rating_', '')),
-    restaurantName: row.venue_name,
-    burritoTitle: row.item_name,
-    rating: scores.overall || 3,
-    taste: scores.taste || 3,
-    value: scores.value || 3,
-    hasPotatoes: ingredients.includes('potatoes'),
-    // ... other legacy fields
-  };
+2. **Field Mapping**: Category-specific fields become generic
+   - `burritoTitle` → `itemTitle` 
+   - Numeric `value` rating → Boolean `value` (good/poor)
+   - Burrito `ingredients` → Generic JSON attributes
+
+3. **Tenant Isolation**: All legacy data preserved under 'burritos' tenant
+
+4. **Backward Compatibility**: Frontend displays both legacy and new data seamlessly
+
+### Data Transformation Examples
+
+**Legacy Rating**:
+```json
+{
+  "restaurantName": "Tu Madre",
+  "burritoTitle": "Pastrami Burrito", 
+  "rating": 4,
+  "taste": 3.3,
+  "value": 2.2,
+  "ingredients": ["pastrami", "eggs", "cheese"]
+}
+```
+
+**Converted to Universal Format**:
+```json
+{
+  "restaurantName": "Tu Madre",
+  "itemTitle": "Pastrami Burrito",
+  "quality": "up",
+  "value": false,
+  "price": 15.50,
+  "attributes": {
+    "ingredients": ["pastrami", "eggs", "cheese"]
+  }
 }
 ```
 
