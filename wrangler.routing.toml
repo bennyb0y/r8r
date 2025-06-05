@@ -1,0 +1,13 @@
+# Cloudflare Worker configuration for wildcard subdomain routing
+name = "r8r-routing"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+main = "routing-worker.js"
+account_id = "4467ef47f4344bb87ee9fc681c6ca144"
+
+# Route configuration for wildcard domains
+[env.production]
+routes = [
+  { pattern = "r8r.one/*", zone_name = "r8r.one" },
+  { pattern = "*.r8r.one/*", zone_name = "r8r.one" }
+]

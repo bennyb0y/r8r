@@ -1,10 +1,16 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+const { setupDevPlatform } = require('@cloudflare/next-on-pages/next-dev');
 const crypto = require('crypto');
+
+// Setup development platform for Cloudflare compatibility
+if (process.env.NODE_ENV === 'development') {
+  setupDevPlatform();
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove static export since we need server-side functionality
-  distDir: 'dist',
+  // Optimized for Cloudflare Pages with multi-tenant support
+  distDir: '.next',
   images: {
     domains: ['*'], // Allow images from all domains
     remotePatterns: [
@@ -94,6 +100,7 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Enable production compression
   compress: true,
+  // Use static export for Cloudflare Pages compatibility
   output: 'export',
   experimental: {
     optimizeCss: true,

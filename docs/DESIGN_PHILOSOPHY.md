@@ -14,7 +14,8 @@ We've embraced a fully cloud-native architecture with zero self-hosted component
 - **Zero Infrastructure Management**: No servers, containers, or databases to maintain
 - **Auto-scaling Built-in**: Infrastructure scales automatically with demand
 - **Pay-per-use Economics**: Cost scales directly with actual usage
-- **Cloud-Native Development**: Development is done directly against cloud resources
+- **Wildcard Routing Layer**: Workers handle unlimited subdomain routing
+- **Cloud-Native Development**: Development is done directly against cloud services
   - Frontend development runs locally but connects to cloud services
   - API changes are deployed directly to the edge
   - Database operations always use cloud D1
@@ -99,7 +100,9 @@ R8R Platform is designed as a true multi-tenant SaaS platform:
 - **Tenant Isolation**: Complete data separation between tenants using tenant_id
 - **Shared Infrastructure**: Single codebase serves all tenants efficiently
 - **Configurable Everything**: Rating categories, attributes, and branding per tenant
-- **Subdomain Routing**: Each tenant gets their own subdomain (pizza.r8r.one)
+- **Wildcard Subdomain Routing**: Each tenant gets their own subdomain (pizza.r8r.one)
+- **Self-Service Subdomain Creation**: Users can create any subdomain without manual setup
+- **Worker-Based Routing**: Cloudflare Workers handle *.r8r.one routing automatically
 - **Flexible Data Model**: JSON-based attributes support any rating category
 - **Tenant-Aware APIs**: All endpoints automatically resolve tenant context
 - **Independent Scaling**: Per-tenant performance optimization and limits
@@ -107,10 +110,12 @@ R8R Platform is designed as a true multi-tenant SaaS platform:
 
 Benefits of this approach:
 - Enables unlimited rating categories (burritos → pizza → coffee → anything)
+- True self-service: Users can instantly create communities at any subdomain
 - Reduces operational overhead compared to separate deployments
 - Provides consistent platform features across all tenants
 - Allows rapid tenant onboarding and customization
 - Maintains security and performance isolation
+- No manual domain management required
 
 ## Technical Decisions
 

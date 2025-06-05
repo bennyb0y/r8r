@@ -8,13 +8,25 @@
     "type": "git",
     "url": "https://github.com/bennyb0y/r8r.git"
   },
-  "keywords": ["rating", "reviews", "multi-tenant", "saas", "platform", "cloudflare", "nextjs"],
+  "keywords": [
+    "rating",
+    "reviews",
+    "multi-tenant",
+    "saas",
+    "platform",
+    "cloudflare",
+    "nextjs"
+  ],
   "author": "Benjamin Fischer",
   "scripts": {
     "dev": "next dev",
     "lint": "eslint . --ignore-pattern '.next/**' --ignore-pattern 'dist/**' --ignore-pattern 'out/**' --ignore-pattern 'deploy/**' --ignore-pattern '.vercel/**' --ignore-pattern '.wrangler/**'",
     "build": "next build",
-    "deploy": "npm run deploy:worker && npm run deploy:app",
+    "build:cloudflare": "npx @cloudflare/next-on-pages",
+    "deploy": "npm run deploy:platform-worker && npm run build && npm run deploy:pages",
+    "deploy:pages": "npx wrangler pages deploy out --project-name r8r-platform",
+    "deploy:platform-worker": "npx wrangler deploy --config wrangler.platform.toml",
+    "deploy:legacy": "npm run deploy:worker && npm run deploy:app",
     "deploy:app": "npm run build && npx wrangler pages deploy dist --commit-dirty=true",
     "deploy:worker": "wrangler deploy --config wrangler.worker.toml",
     "analyze": "ANALYZE=true next build"
@@ -37,7 +49,7 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
-    "@cloudflare/next-on-pages": "^1.9.0",
+    "@cloudflare/next-on-pages": "^1.13.12",
     "@cloudflare/workers-types": "^4.20250311.0",
     "@next/bundle-analyzer": "^15.2.2",
     "@types/google.maps": "^3.55.4",
@@ -51,7 +63,7 @@
     "eslint-config-next": "^15.2.2",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "wrangler": "^3.32.0"
+    "wrangler": "^4.19.1"
   },
   "overrides": {
     "path-to-regexp": "^6.2.3",

@@ -53,12 +53,14 @@ next-env.d.ts
 .wrangler/
 .dev.vars
 .r2/
+wrangler-*.log
 
 # Build artifacts
 .deploy/
-deploy/
+deploy/out/
 .cache/
 .temp/
+node_modules/.cache/
 
 # Backup files
 *.bak

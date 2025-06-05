@@ -1,0 +1,44 @@
+# Wrangler deployment ignore file for R8R Platform
+
+# Next.js cache and build artifacts that shouldn't be deployed
+.next/cache/
+.next/standalone/
+cache/
+node_modules/
+.env.local
+.env*.local
+
+# Development files
+.git/
+.gitignore
+*.log
+*.logs
+wrangler.toml
+wrangler.*.toml
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Documentation that doesn't need deployment
+docs/
+README.md
+CLAUDE.md
+*.md
+
+# Backup and temporary files
+backup-worker/
+scripts/
+out/

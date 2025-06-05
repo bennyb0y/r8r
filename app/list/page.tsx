@@ -1,5 +1,8 @@
 'use client';
 
+
+'use client';
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MiniMap from '../components/MiniMap';
@@ -40,10 +43,19 @@ export default function ListPage() {
   useEffect(() => {
     const fetchRatings = async () => {
       try {
+        // Check if we're in development mode and API might not be available
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        
         // Fetch all ratings from the API
         const response = await fetch(getApiUrl('ratings'));
         
         if (!response.ok) {
+          if (isDevelopment) {
+            console.warn('API not available in development mode, using empty state');
+            setRatings([]);
+            return;
+          }
+          
           const errorText = await response.text();
           console.error(`API Error (${response.status}): ${errorText}`);
           throw new Error(`Failed to fetch ratings: ${response.status} ${response.statusText}`);
@@ -66,6 +78,12 @@ export default function ListPage() {
         setRatings(confirmedRatings);
       } catch (error) {
         console.error('Error fetching ratings:', error);
+        
+        // In development, don't show error for missing API
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('API not available in development mode, this is expected until the platform API is deployed');
+          setRatings([]);
+        }
       }
     };
 

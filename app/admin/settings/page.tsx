@@ -1,3 +1,6 @@
+'use client';
+
+
 import DashboardLayout from '../../components/DashboardLayout';
 import BackupControl from '../components/BackupControl';
 import RecentBackups from '../components/RecentBackups';

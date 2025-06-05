@@ -107,10 +107,20 @@ const MapComponent: React.FC<MapProps> = ({ refreshTrigger = 0 }) => {
   useEffect(() => {
     const fetchRatings = async () => {
       try {
+        // Check if we're in development mode and API might not be available
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        
         // Fetch all ratings from the API
         const response = await fetch(getApiUrl('ratings'));
         
         if (!response.ok) {
+          if (isDevelopment) {
+            console.warn('API not available in development mode, using empty state');
+            setRatings([]);
+            setError(null);
+            return;
+          }
+          
           const errorText = await response.text();
           console.error(`API Error (${response.status}): ${errorText}`);
           throw new Error(`Failed to fetch ratings: ${response.status} ${response.statusText}`);
@@ -128,7 +138,15 @@ const MapComponent: React.FC<MapProps> = ({ refreshTrigger = 0 }) => {
         setError(null);
       } catch (error) {
         console.error('Error fetching ratings:', error);
-        setError('Failed to load ratings. Please try again later.');
+        
+        // In development, don't show error for missing API
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('API not available in development mode, this is expected until the platform API is deployed');
+          setRatings([]);
+          setError(null);
+        } else {
+          setError('Failed to load ratings. Please try again later.');
+        }
       }
     };
 

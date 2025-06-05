@@ -19,6 +19,12 @@ npm run deploy:worker # Deploy API worker to Cloudflare Workers
 npm run deploy        # Deploy both worker and app (runs deploy:worker then deploy:app)
 ```
 
+### Routing Worker Deployment
+```bash
+# Deploy wildcard routing worker (for *.r8r.one support)
+CLOUDFLARE_ACCOUNT_ID=4467ef47f4344bb87ee9fc681c6ca144 npx wrangler deploy --config wrangler.routing.toml --env production
+```
+
 ## Project Architecture
 
 ### Tech Stack
@@ -31,18 +37,26 @@ npm run deploy        # Deploy both worker and app (runs deploy:worker then depl
 
 ### Cloud-Native Architecture
 This is a fully serverless, edge-first application with zero self-hosted components:
+- **Routing Layer**: Cloudflare Workers handle wildcard subdomain routing (*.r8r.one)
+- **Frontend**: Cloudflare Pages with tenant-aware Next.js application
+- **API Layer**: Cloudflare Workers for tenant-isolated backend services
+- **Database**: Cloudflare D1 with multi-tenant schema
 - All development connects to cloud services directly
 - No local API or database development environment
 - Single source of truth in Cloudflare D1 for all environments
 - Edge-deployed Workers for global low-latency API access
+- True self-service subdomain creation
 
 ### Key Directories
 - `app/` - Next.js app directory with pages and components
 - `app/admin/` - Admin interface with authentication wrapper
 - `app/components/` - Reusable React components
+- `app/contexts/` - React context providers (TenantContext)
 - `api/` - Cloudflare Worker code (worker.js)
-- `lib/` - Database interfaces and shared utilities
+- `lib/` - Database interfaces and shared utilities (tenant.ts)
 - `docs/` - Comprehensive project documentation
+- `routing-worker.js` - Wildcard subdomain routing worker
+- `wrangler.routing.toml` - Routing worker configuration
 
 ### Admin Interface Architecture
 Centralized under `/app/admin/` with:

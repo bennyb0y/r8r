@@ -9,10 +9,12 @@ R8R transforms the way communities share and discover experiences. Instead of on
 ## 🚀 Platform Features
 
 ### Multi-Tenant Architecture
-- **Subdomain-based communities**: Each tenant gets their own `name.r8r.one` subdomain
+- **Self-Service Subdomains**: Users can instantly create `anything.r8r.one` communities
+- **Wildcard Routing**: Cloudflare Workers handle unlimited subdomain creation automatically
 - **Custom rating categories**: Configure taste, quality, service, ambiance - whatever matters
 - **Flexible item attributes**: Ingredients, features, genres - fully customizable
 - **Tenant-specific branding**: Colors, logos, and custom styling
+- **Complete data isolation**: Each tenant's data is strictly separated
 
 ### Core Rating Engine
 - **🗺️ Interactive Maps**: Location-based discovery with Google Maps integration
@@ -35,9 +37,9 @@ R8R transforms the way communities share and discover experiences. Instead of on
 - **Multi-tenant routing** and subdomain handling
 
 ### Backend & Infrastructure
-- **Cloudflare Workers** for serverless API (edge-deployed globally)
-- **Cloudflare D1** for SQLite-compatible edge database
-- **Cloudflare Pages** for static site hosting
+- **Cloudflare Workers** for serverless API and wildcard routing (edge-deployed globally)
+- **Cloudflare D1** for SQLite-compatible edge database with multi-tenant schema
+- **Cloudflare Pages** for static site hosting with tenant-aware routing
 - **Cloudflare R2** for image storage and CDN delivery
 
 ### Architecture Principles

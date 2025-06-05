@@ -1,0 +1,20 @@
+name = "r8r-platform-api"
+main = "api/platform-worker.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "4467ef47f4344bb87ee9fc681c6ca144"  # Bennyfischer@gmail.com's Account
+
+# Multi-tenant database
+[[d1_databases]]
+binding = "PLATFORM_DB"
+database_name = "r8r-platform-db"
+database_id = "e278441a-734f-46b6-ac48-72d2d02c6cbc"
+
+# Tenant image storage
+[[r2_buckets]]
+binding = "TENANT_IMAGES"
+bucket_name = "r8r-images"
+
+# Environment variables (set via wrangler secret)
+# PLATFORM_JWT_SECRET - Set via: wrangler secret put PLATFORM_JWT_SECRET
+# TURNSTILE_SECRET_KEY - Set via: wrangler secret put TURNSTILE_SECRET_KEY

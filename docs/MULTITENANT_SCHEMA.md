@@ -4,15 +4,17 @@ This document defines the multi-tenant database schema for the R8R platform, des
 
 ## Overview
 
-The multi-tenant schema transforms the rigid, burrito-specific structure into a flexible platform that can handle any rating category while maintaining data isolation between tenants.
+The multi-tenant schema transforms the rigid, burrito-specific structure into a flexible platform that can handle any rating category while maintaining data isolation between tenants. This enables true self-service subdomain creation where users can instantly create communities at any subdomain (e.g., `pizza.r8r.one`, `coffee.r8r.one`) without manual setup.
 
 ## Core Design Principles
 
 1. **Tenant Isolation**: All data is strictly isolated by tenant_id
-2. **Flexible Attributes**: JSON-based storage for category-specific attributes
-3. **Configurable Ratings**: Dynamic rating categories per tenant
-4. **Backward Compatibility**: Migration path from current burrito data
-5. **Performance**: Proper indexing for multi-tenant queries
+2. **Self-Service Creation**: Wildcard routing enables instant subdomain creation
+3. **Flexible Attributes**: JSON-based storage for category-specific attributes
+4. **Configurable Ratings**: Dynamic rating categories per tenant
+5. **Default Configurations**: Pre-defined configs for common categories (burritos, pizza, coffee)
+6. **Backward Compatibility**: Migration path from current burrito data
+7. **Performance**: Proper indexing for multi-tenant queries
 
 ## Schema Design
 

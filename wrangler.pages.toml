@@ -1,0 +1,38 @@
+# Cloudflare Pages Configuration for R8R Multi-Tenant Platform
+# This configuration supports unlimited self-service tenant creation
+
+name = "r8r-platform"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "4467ef47f4344bb87ee9fc681c6ca144"
+
+# Pages-specific configuration
+[build]
+command = "npm run build"
+cwd = "."
+watch_dir = "."
+
+[build.environment]
+NODE_VERSION = "18"
+NPM_FLAGS = "--version"
+
+# Environment variables for multi-tenant platform
+[env.production]
+NEXT_PUBLIC_PLATFORM_DOMAIN = "r8r.one"
+NEXT_PUBLIC_API_BASE_URL = "https://api.r8r.one"
+NEXT_PUBLIC_PLATFORM_MODE = "true"
+
+[env.preview]
+NEXT_PUBLIC_PLATFORM_DOMAIN = "r8r.one"
+NEXT_PUBLIC_API_BASE_URL = "https://api-preview.r8r.one"
+NEXT_PUBLIC_PLATFORM_MODE = "true"
+
+# Routing configuration for wildcard domains
+[[redirects]]
+from = "https://www.r8r.one/*"
+to = "https://r8r.one/:splat"
+status = 301
+
+# Support for unlimited tenant subdomains
+# This allows any [tenant].r8r.one to work automatically
+# No need to pre-register domains - they resolve dynamically
