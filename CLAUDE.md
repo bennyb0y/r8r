@@ -67,11 +67,12 @@ Centralized under `/app/admin/` with:
 - Event-driven communication between components
 
 ### Database Schema
-The main `Rating` interface (defined in `lib/db.ts`) includes:
-- Location data (latitude, longitude, zipcode)
-- Rating metrics (rating, taste, value, price)
-- Burrito details (ingredients, restaurant, title)
-- User identity (reviewer name, emoji, identity password)
+The main `Rating` interface (defined in `app/components/TenantPage.tsx`) includes:
+- Location data (zipcode)
+- Universal rating metrics (quality thumbs system, value yes/no, price)
+- Generic item details (restaurant name, item title)
+- User identity (reviewer name, identity password)
+- Backward compatibility with legacy numeric rating systems
 
 ### Environment Variables
 All environment variables must be in `.env.local` with `NEXT_PUBLIC_` prefix:
@@ -90,6 +91,8 @@ The platform supports unlimited self-service tenant creation with complete isola
 - **Universal Components**: Single TenantPage component handles all tenant types with configurable theming
 - **Development Testing**: `/dev/[tenant]` routes allow localhost testing of any tenant
 - **Data Isolation**: All database queries are tenant-scoped for complete data separation
+- **Generic Rating System**: Universal thumbs up/neutral/down quality ratings and yes/no value ratings
+- **Cross-Category Support**: Works for food, beverages, services, products, or any reviewable items
 
 ### Development Philosophy
 - Cloud-native first with serverless everything

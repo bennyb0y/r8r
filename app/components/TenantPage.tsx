@@ -5,9 +5,11 @@ import { useState, useEffect } from 'react';
 interface Rating {
   id: string;
   restaurantName: string;
-  burritoTitle: string;
-  rating: number;
+  itemTitle: string;
+  rating: number; // Average of quality ratings (for display)
+  quality: 'up' | 'neutral' | 'down'; // Thumbs system
   price: number;
+  value: boolean; // Yes/No for good value
   reviewerName?: string;
   zipcode?: string;
   createdAt?: string;
@@ -42,12 +44,22 @@ const TENANT_CONFIGS = {
   pizza: {
     emoji: '🍕',
     name: 'Pizza Reviews',
-    itemName: 'pizza',
+    itemName: 'slice',
     itemNamePlural: 'pizzas', 
     bgColor: '#fef2f2',
     primaryColor: '#991b1b',
     secondaryColor: '#dc2626',
     accentColor: '#ef4444',
+  },
+  coffee: {
+    emoji: '☕',
+    name: 'Coffee Reviews',
+    itemName: 'coffee',
+    itemNamePlural: 'coffees',
+    bgColor: '#fef7ed',
+    primaryColor: '#9a3412',
+    secondaryColor: '#c2410c',
+    accentColor: '#ea580c',
   },
   default: {
     emoji: '⭐',
@@ -101,10 +113,22 @@ export default function TenantPage({ tenantId }: TenantPageProps) {
         const data = await response.json();
         console.log('Fetched ratings:', data.length);
         
-        // Filter confirmed ratings only
-        const confirmedRatings = data.filter((rating: Rating) => 
-          rating.id && rating.restaurantName && rating.burritoTitle
-        );
+        // Transform legacy data to new format and filter confirmed ratings
+        const confirmedRatings = data
+          .filter((rating: any) => 
+            rating.id && rating.restaurantName && (rating.itemTitle || rating.burritoTitle)
+          )
+          .map((rating: any) => ({
+            ...rating,
+            // Handle legacy field name
+            itemTitle: rating.itemTitle || rating.burritoTitle || 'Unknown Item',
+            // Convert legacy numeric ratings to thumbs system
+            quality: rating.quality || (rating.rating >= 4 ? 'up' : rating.rating <= 2 ? 'down' : 'neutral'),
+            // Convert legacy value rating to boolean (>3 = good value)
+            value: rating.value !== undefined ? rating.value : (rating.valueRating ? rating.valueRating > 3 : true),
+            // Ensure price is a number
+            price: rating.price || 0
+          }));
         
         setRatings(confirmedRatings);
       } catch (err) {
@@ -368,17 +392,48 @@ export default function TenantPage({ tenantId }: TenantPageProps) {
                       <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.25rem' }}>
                         {rating.restaurantName}
                       </h3>
-                      <p style={{ color: '#6b7280' }}>{rating.burritoTitle}</p>
+                      <p style={{ color: '#6b7280' }}>{rating.itemTitle}</p>
                     </div>
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: config.accentColor }}>
-                          {rating.rating}
-                        </span>
-                        <span style={{ fontSize: '0.875rem', color: '#6b7280', marginLeft: '0.25rem' }}>/5</span>
+                    {/* Quality and Price Row */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: isMobile ? 'flex-start' : 'center', 
+                      marginBottom: '0.75rem',
+                      flexDirection: isMobile ? 'column' : 'row',
+                      gap: isMobile ? '0.75rem' : '1rem'
+                    }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: isMobile ? '1.5rem' : '1rem',
+                        flexWrap: 'wrap'
+                      }}>
+                        {/* Quality Rating */}
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.875rem', color: '#6b7280', marginRight: '0.5rem' }}>Quality:</span>
+                          <span style={{ fontSize: '1.5rem' }}>
+                            {rating.quality === 'up' ? '👍' : rating.quality === 'down' ? '👎' : '😐'}
+                          </span>
+                        </div>
+                        
+                        {/* Value Rating */}
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.875rem', color: '#6b7280', marginRight: '0.5rem' }}>Value:</span>
+                          <span style={{ fontSize: '1rem', fontWeight: '600', color: rating.value ? '#059669' : '#dc2626' }}>
+                            {rating.value ? 'Yes' : 'No'}
+                          </span>
+                        </div>
                       </div>
-                      <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#059669' }}>
+                      
+                      {/* Price */}
+                      <div style={{ 
+                        fontSize: '1.25rem', 
+                        fontWeight: '700', 
+                        color: '#059669',
+                        alignSelf: isMobile ? 'flex-end' : 'center'
+                      }}>
                         ${rating.price?.toFixed(2) || '0.00'}
                       </div>
                     </div>
