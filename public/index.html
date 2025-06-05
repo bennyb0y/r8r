@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R8R Platform - Community Rating Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .container {
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #eff6ff, #ffffff);
+        }
+        
+        .content {
+            max-width: 64rem;
+            margin: 0 auto;
+            padding: 4rem 1rem;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle {
+            font-size: 1.25rem;
+            color: #6b7280;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .community-link {
+            display: block;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        .community-link:hover {
+            border-color: #3b82f6;
+        }
+        
+        .community-link h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .community-link p {
+            color: #6b7280;
+        }
+        
+        .footer {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>R8R Platform</h1>
+            <p class="subtitle">Community-driven rating platform for anything and everything</p>
+            
+            <div class="card">
+                <h2>Featured Communities</h2>
+                <div class="grid">
+                    <a href="https://burritos.r8r.one" class="community-link">
+                        <h3>🌯 Burrito Reviews</h3>
+                        <p>Rate and discover the best burritos</p>
+                    </a>
+                    <a href="https://sample.r8r.one" class="community-link">
+                        <h3>📝 Sample Community</h3>
+                        <p>Example rating community</p>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="footer">
+                Create your own rating community at R8R Platform
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple tenant detection and redirect
+        const hostname = window.location.hostname;
+        const tenantMatch = hostname.match(/^([^.]+)\.r8r\.one$/);
+        
+        if (tenantMatch && tenantMatch[1] !== 'www' && tenantMatch[1] !== 'api') {
+            const tenant = tenantMatch[1];
+            
+            if (tenant === 'burritos' && window.location.pathname === '/') {
+                window.location.replace('/burritos.html');
+            } else if (tenant !== 'burritos' && window.location.pathname === '/') {
+                // Show not configured message
+                document.body.innerHTML = `
+                    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #f3f4f6;">
+                        <div style="text-align: center; padding: 2rem;">
+                            <h1 style="font-size: 1.5rem; font-weight: bold; color: #1f2937; margin-bottom: 1rem;">
+                                ${tenant.charAt(0).toUpperCase() + tenant.slice(1)} Community
+                            </h1>
+                            <p style="color: #6b7280; margin-bottom: 1rem;">
+                                This community is not yet configured.
+                            </p>
+                            <a href="https://r8r.one" style="color: #2563eb; text-decoration: underline;">
+                                Return to R8R Platform
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

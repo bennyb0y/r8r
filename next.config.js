@@ -1,109 +1,18 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { setupDevPlatform } = require('@cloudflare/next-on-pages/next-dev');
-const crypto = require('crypto');
-
-// Setup development platform for Cloudflare compatibility
-if (process.env.NODE_ENV === 'development') {
-  setupDevPlatform();
-}
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Optimized for Cloudflare Pages with multi-tenant support
-  distDir: '.next',
+  // Simple configuration for static export
   images: {
-    domains: ['*'], // Allow images from all domains
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
     unoptimized: true,
   },
   // Disable ESLint during build
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Optimize build size
-  webpack: (config, { dev, isServer }) => {
-    // Only apply optimizations for client-side production builds
-    if (!dev && !isServer) {
-      // Split chunks more aggressively
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        maxInitialRequests: 25,
-        minSize: 20000,
-        cacheGroups: {
-          default: false,
-          vendors: false,
-          // Framework chunk
-          framework: {
-            name: 'framework',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/](react|react-dom|@react-google-maps)[\\/]/,
-            priority: 40,
-            enforce: true,
-            reuseExistingChunk: true
-          },
-          // Library chunk
-          lib: {
-            test(module) {
-              return (
-                module.size() > 160000 &&
-                /node_modules[/\\]/.test(module.identifier())
-              );
-            },
-            name(module) {
-              const hash = crypto.createHash('sha1');
-              hash.update(module.identifier());
-              return 'lib-' + hash.digest('hex').substring(0, 8);
-            },
-            priority: 30,
-            minChunks: 1,
-            reuseExistingChunk: true,
-            maxSize: 24 * 1024 * 1024 // 24MB max size
-          },
-          // Commons chunk
-          commons: {
-            name: 'commons',
-            minChunks: 2,
-            priority: 20
-          },
-          // Shared chunk
-          shared: {
-            name(module, chunks) {
-              const hash = crypto
-                .createHash('sha1')
-                .update(chunks.reduce((acc, chunk) => acc + chunk.name, ''))
-                .digest('hex');
-              return hash.substring(0, 8);
-            },
-            priority: 10,
-            minChunks: 2,
-            reuseExistingChunk: true,
-            maxSize: 24 * 1024 * 1024 // 24MB max size
-          }
-        }
-      };
-
-      // Enable terser for minification
-      config.optimization.minimize = true;
-
-      // Use deterministic chunk and module ids
-      config.optimization.moduleIds = 'deterministic';
-      config.optimization.chunkIds = 'deterministic';
-    }
-    return config;
-  },
-  // Disable source maps in production to reduce bundle size
-  productionBrowserSourceMaps: false,
-  // Enable production compression
-  compress: true,
-  // Removed static export to support dynamic API routes
+  // Use static export for Cloudflare Pages
+  output: 'export',
+  // Disable optimizations that might cause issues
   experimental: {
-    optimizeCss: true,
-    webpackBuildWorker: true
+    optimizeCss: false,
   },
 };
 

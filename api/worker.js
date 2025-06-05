@@ -107,9 +107,9 @@ function validateApiKey(request, env) {
 
 // CORS headers for all responses
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Allow all origins in development
+  'Access-Control-Allow-Origin': '*', // Allow all origins
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-ID',
   'Access-Control-Max-Age': '86400',
 };
 
