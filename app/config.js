@@ -2,7 +2,7 @@
 
 // API configuration
 export const getApiUrl = (endpoint) => {
-  // Use the environment variable for the API base URL
+  // Use the environment variable for the API base URL or default to new worker
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://r8r-platform-api.bennyfischer.workers.dev';
   
   console.log(`Using API base URL: ${baseUrl}`);

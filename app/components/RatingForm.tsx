@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { generateUserEmoji, validatePassword } from '../utils/auth';
 import Turnstile from './Turnstile';
+import { getApiUrl } from '../config.js';
 
 interface Position {
   lat: number;
@@ -263,7 +264,7 @@ export default function RatingForm({ position, onSubmit, onClose }: Props) {
       const formData = new FormData();
       formData.append('image', image);
 
-      const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/images/upload`, {
+      const uploadResponse = await fetch(getApiUrl('images/upload'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.NEXT_PUBLIC_R2_API_TOKEN}`

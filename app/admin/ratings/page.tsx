@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Card, Table, TableRow, TableCell, TableHead, TableHeaderCell, TableBody } from '@tremor/react';
+import { getApiUrl } from '../../config.js';
 
 interface Rating {
   id: number;
@@ -70,7 +71,7 @@ export default function RatingsPage() {
 
   const fetchRatings = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/ratings`);
+      const response = await fetch(getApiUrl('ratings'));
       if (!response.ok) {
         throw new Error('Failed to fetch ratings');
       }
@@ -107,7 +108,7 @@ export default function RatingsPage() {
 
   const handleConfirm = async (id: number) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/ratings/${id}/confirm`, {
+      const response = await fetch(getApiUrl(`ratings/${id}/confirm`), {
         method: 'PUT',
       });
       if (!response.ok) {
@@ -131,7 +132,7 @@ export default function RatingsPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/ratings/${id}`, {
+      const response = await fetch(getApiUrl(`ratings/${id}`), {
         method: 'DELETE',
       });
       if (!response.ok) {
@@ -158,7 +159,7 @@ export default function RatingsPage() {
 
     setIsConfirming(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/ratings/confirm-bulk`, {
+      const response = await fetch(getApiUrl('ratings/confirm-bulk'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -198,7 +199,7 @@ export default function RatingsPage() {
     setIsDeleting(true);
     try {
       const deletePromises = Array.from(selectedIds).map(id =>
-        fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/ratings/${id}`, {
+        fetch(getApiUrl(`ratings/${id}`), {
           method: 'DELETE',
         })
       );
