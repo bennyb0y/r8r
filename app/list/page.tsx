@@ -47,9 +47,15 @@ export default function ListPage() {
         const isDevelopment = process.env.NODE_ENV === 'development';
         
         // Fetch all ratings from the API with tenant context
-        const response = await fetch(getApiUrl('ratings'), {
-          headers: getTenantHeaders()
-        });
+        const apiUrl = getApiUrl('ratings');
+        const headers = getTenantHeaders();
+        
+        console.log('Fetching ratings from:', apiUrl);
+        console.log('Using headers:', headers);
+        
+        const response = await fetch(apiUrl, { headers });
+        
+        console.log('API response status:', response.status);
         
         if (!response.ok) {
           if (isDevelopment) {

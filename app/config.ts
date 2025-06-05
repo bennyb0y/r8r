@@ -3,13 +3,16 @@
 // Helper function to get current tenant from various sources
 const getCurrentTenant = (): string => {
   if (typeof window === 'undefined') {
+    console.log('SSR: defaulting to burritos tenant');
     return 'burritos'; // Default for SSR
   }
   
   // 1. Try to detect from hostname
   const hostname = window.location.hostname;
+  console.log('Detecting tenant from hostname:', hostname);
   const match = hostname.match(/^([^.]+)\.r8r\.one$/);
   if (match && match[1] !== 'www' && match[1] !== 'api') {
+    console.log('Detected tenant from hostname:', match[1]);
     return match[1];
   }
   
@@ -17,17 +20,19 @@ const getCurrentTenant = (): string => {
   const urlParams = new URLSearchParams(window.location.search);
   const tenantParam = urlParams.get('tenant');
   if (tenantParam) {
+    console.log('Detected tenant from URL param:', tenantParam);
     return tenantParam;
   }
   
   // 3. Default to burritos
+  console.log('No tenant detected, defaulting to burritos');
   return 'burritos';
 };
 
 // API configuration
 export const getApiUrl = (endpoint: string, tenantId?: string): string => {
-  // Use the environment variable for the API base URL or default to new worker
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://r8r-platform-api.bennyfischer.workers.dev';
+  // Always use the worker directly since Next.js API routes don't work on Cloudflare Pages
+  const baseUrl = 'https://r8r-platform-api.bennyfischer.workers.dev';
   
   console.log(`Using API base URL: ${baseUrl}`);
   
@@ -48,9 +53,12 @@ export const getApiUrl = (endpoint: string, tenantId?: string): string => {
   
   // Add tenant parameter if not provided directly
   const tenant = tenantId || getCurrentTenant();
+  const finalUrl = `${baseUrl}/${formattedEndpoint}?tenant=${tenant}`;
+  
+  console.log('Generated API URL:', finalUrl);
   
   // Combine the base URL, endpoint, and tenant parameter
-  return `${baseUrl}/${formattedEndpoint}?tenant=${tenant}`;
+  return finalUrl;
 };
 
 // Helper function to get headers with tenant information
