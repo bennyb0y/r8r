@@ -50,8 +50,9 @@ This is a fully serverless, edge-first application with zero self-hosted compone
 ### Key Directories
 - `app/` - Next.js app directory with pages and components
 - `app/admin/` - Admin interface with authentication wrapper
-- `app/components/` - Reusable React components
+- `app/components/` - Reusable React components (includes TenantPage.tsx)
 - `app/contexts/` - React context providers (TenantContext)
+- `app/dev/[tenant]/` - Dynamic development routing for localhost testing
 - `api/` - Cloudflare Worker code (worker.js)
 - `lib/` - Database interfaces and shared utilities (tenant.ts)
 - `docs/` - Comprehensive project documentation
@@ -82,12 +83,21 @@ All environment variables must be in `.env.local` with `NEXT_PUBLIC_` prefix:
 ### API Configuration
 The `getApiUrl()` function in `app/config.ts` handles API endpoint construction with proper `/api/` prefixing for Cloudflare Workers routing.
 
+### Multi-Tenant Architecture
+The platform supports unlimited self-service tenant creation with complete isolation:
+- **Dynamic Routing**: Any subdomain (*.r8r.one) automatically works without manual configuration
+- **Tenant Detection**: API worker detects tenants from hostname, headers, and query parameters
+- **Universal Components**: Single TenantPage component handles all tenant types with configurable theming
+- **Development Testing**: `/dev/[tenant]` routes allow localhost testing of any tenant
+- **Data Isolation**: All database queries are tenant-scoped for complete data separation
+
 ### Development Philosophy
 - Cloud-native first with serverless everything
 - Event-driven design for real-time updates
 - API-first development with clean separation
 - Edge-first deployment for global performance
 - Zero Trust security model for admin access
+- Self-service tenant creation without developer intervention
 
 ## Important Notes
 

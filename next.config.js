@@ -8,18 +8,12 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Use static export for Cloudflare Pages compatibility
-  output: 'export',
+  // Use static export for Cloudflare Pages compatibility (disable in dev)
+  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
   // Simplify build
   experimental: {
     optimizeCss: false,
   },
-  // Exclude API worker files from build
-  exclude: [
-    'api/**',
-    'routing-worker.js',
-    'wrangler*.toml'
-  ],
 };
 
 module.exports = nextConfig; 
