@@ -39,7 +39,11 @@ r8r/
 ```
 app/
 ├── components/        # Reusable React components
-│   ├── Map.tsx       # Google Maps integration
+│   ├── MapboxComponent.tsx # Primary Mapbox GL JS integration
+│   ├── Map.tsx       # Google Maps integration (legacy)
+│   ├── MapComponent.tsx # Google Maps component (legacy)
+│   ├── MiniMap.tsx   # Small map previews
+│   ├── TenantPage.tsx # Universal tenant page component
 │   ├── RatingForm.tsx # Rating submission form
 │   └── ...
 ├── admin/            # Admin interface pages and components
@@ -62,10 +66,28 @@ app/
 ```
 
 ### Component Organization (`app/components/`)
-- **Map Components**: Map-related components for displaying ratings
-- **Form Components**: Rating submission and editing forms
-- **UI Components**: Reusable UI elements like buttons and modals
-- **Layout Components**: Page layout and structure components
+
+#### Map Components
+- **MapboxComponent.tsx**: Primary map implementation using Mapbox GL JS
+  - Full-screen map view with viewport-filling capability
+  - Interactive marker system with click-to-preview functionality
+  - Popup management with proper z-index layering
+  - Tenant-aware styling and theming
+  - Mobile-responsive design
+- **Map.tsx**: Google Maps wrapper component (legacy)
+- **MapComponent.tsx**: Google Maps implementation (legacy)
+- **MiniMap.tsx**: Small map component for rating previews
+
+#### Core Components
+- **TenantPage.tsx**: Universal tenant page component with dual list/map views
+- **RatingForm.tsx**: Dynamic rating submission form
+- **Navigation.tsx**: Site navigation and routing
+- **Header.tsx**: Page headers and branding
+
+#### UI Components
+- **Turnstile.tsx**: Cloudflare CAPTCHA integration
+- **UserIdentityForm.tsx**: User identification forms
+- **DevelopmentNotice.tsx**: Development environment notifications
 
 ### API Directory (`api/`)
 ```

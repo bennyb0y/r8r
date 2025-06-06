@@ -142,6 +142,17 @@ export function resolveTenantFromHost(host: string): string | null {
 - `/list` - Tenant-specific rating list
 - `/guide` - Tenant-specific usage guide
 
+**UI Components & Features**:
+- **TenantPage**: Universal component handling all tenant types with configurable theming
+- **MapboxComponent**: Interactive maps using Mapbox GL JS with full-screen capability
+- **Full-Screen Map View**: Immersive map experience that fills entire viewport
+  - Floating header overlay with tenant branding and navigation
+  - Z-index management for proper popup/marker layering
+  - Event handling for marker clicks and popup interactions
+  - Responsive design for mobile and desktop
+- **RatingForm**: Dynamic form adapting to tenant category (food, products, services)
+- **Admin Interface**: Real-time dashboard with rating moderation and analytics
+
 ### 3. API Layer (Cloudflare Workers)
 
 **Purpose**: Provide tenant-aware API endpoints

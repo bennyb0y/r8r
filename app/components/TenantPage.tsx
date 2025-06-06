@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import MapboxComponent from './MapboxComponent';
 
 interface Rating {
   id: string;
@@ -13,6 +14,8 @@ interface Rating {
   reviewerName?: string;
   zipcode?: string;
   createdAt?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface TenantPageProps {
@@ -165,6 +168,81 @@ export default function TenantPage({ tenantId }: TenantPageProps) {
     );
   }
 
+  // Full-screen map view
+  if (currentView === 'map') {
+    return (
+      <div style={{ height: '100vh', width: '100vw', position: 'relative' }}>
+        {/* Compact header for map view */}
+        <div style={{ 
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: `1px solid ${config.bgColor}`,
+          padding: '0.75rem 1rem',
+          pointerEvents: 'auto'
+        }}>
+          <div style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <h1 style={{ fontSize: '1rem', fontWeight: 'bold', color: config.primaryColor, margin: 0 }}>
+                {config.emoji} {config.name}
+              </h1>
+              <span style={{ fontSize: '0.75rem', color: config.secondaryColor }}>
+                {ratings.length} reviews
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button
+                onClick={() => setCurrentView('list')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0.5rem 0.75rem',
+                  backgroundColor: config.bgColor,
+                  color: config.secondaryColor,
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  fontWeight: '600'
+                }}
+              >
+                <span style={{ marginRight: '0.25rem' }}>📋</span>
+                List
+              </button>
+              <a 
+                href="https://r8r.one" 
+                style={{ 
+                  color: config.accentColor, 
+                  textDecoration: 'none',
+                  fontSize: '0.75rem'
+                }}
+              >
+                ← R8R
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Full-screen map */}
+        <div style={{ height: '100vh', width: '100vw', pointerEvents: 'auto' }}>
+          <MapboxComponent 
+            ratings={ratings} 
+            config={config} 
+            isMobile={isMobile}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: config.bgColor }}>
       {/* Mobile Top Navigation */}
@@ -232,8 +310,8 @@ export default function TenantPage({ tenantId }: TenantPageProps) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '0.75rem',
-                backgroundColor: currentView === 'map' ? config.accentColor : config.bgColor,
-                color: currentView === 'map' ? 'white' : config.secondaryColor,
+                backgroundColor: (currentView as string) === 'map' ? config.accentColor : config.bgColor,
+                color: (currentView as string) === 'map' ? 'white' : config.secondaryColor,
                 border: 'none',
                 borderRadius: '0.5rem',
                 cursor: 'pointer',
@@ -310,13 +388,13 @@ export default function TenantPage({ tenantId }: TenantPageProps) {
                   width: '100%',
                   padding: '0.75rem 1rem',
                   marginBottom: '0.5rem',
-                  backgroundColor: currentView === 'map' ? config.bgColor : 'transparent',
-                  color: currentView === 'map' ? config.primaryColor : config.secondaryColor,
+                  backgroundColor: (currentView as string) === 'map' ? config.bgColor : 'transparent',
+                  color: (currentView as string) === 'map' ? config.primaryColor : config.secondaryColor,
                   border: 'none',
                   borderRadius: '0.5rem',
                   cursor: 'pointer',
                   fontSize: '0.875rem',
-                  fontWeight: currentView === 'map' ? '600' : '400',
+                  fontWeight: (currentView as string) === 'map' ? '600' : '400',
                   textAlign: 'left'
                 }}
               >
@@ -455,43 +533,17 @@ export default function TenantPage({ tenantId }: TenantPageProps) {
             )
           ) : (
             // Map View
-            <div style={{ 
-              backgroundColor: 'white', 
-              borderRadius: isMobile ? '0' : '0.5rem', 
-              padding: isMobile ? '2rem 1rem' : '2rem', 
-              textAlign: 'center',
-              border: isMobile ? 'none' : `1px solid ${config.bgColor}`,
-              minHeight: isMobile ? 'calc(100vh - 200px)' : '500px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexDirection: 'column',
+            <div style={{
               width: isMobile ? 'calc(100% + 2rem)' : 'auto',
               marginLeft: isMobile ? '-1rem' : '0',
-              marginRight: isMobile ? '-1rem' : '0'
+              marginRight: isMobile ? '-1rem' : '0',
+              marginTop: isMobile ? '-1rem' : '0'
             }}>
-              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🗺️</div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: config.primaryColor, marginBottom: '0.5rem' }}>
-                Map View Coming Soon
-              </h3>
-              <p style={{ color: config.secondaryColor, marginBottom: '1rem' }}>
-                Interactive map with {config.itemName} locations will be available here
-              </p>
-              <button
-                onClick={() => setCurrentView('list')}
-                style={{
-                  backgroundColor: config.accentColor,
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
-              >
-                View as List
-              </button>
+              <MapboxComponent 
+                ratings={ratings} 
+                config={config} 
+                isMobile={isMobile}
+              />
             </div>
           )}
         </div>
