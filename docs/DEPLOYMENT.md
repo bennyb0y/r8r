@@ -8,19 +8,18 @@ This guide covers the complete deployment process for the R8R multi-tenant ratin
 
 ## Configuration File Status
 
-### ✅ WORKING Configurations:
+### ✅ CLEAN Configurations:
 - **`wrangler.worker.toml`** - API Worker (points to existing `api/worker.js`)
 - **`wrangler.routing.toml`** - Routing Worker (for `*.r8r.one` subdomains)
 - **`wrangler.pages.toml`** - Pages deployment (detailed config)
 - **`wrangler.toml`** - Basic Pages config (fallback)
 - **`backup-worker/wrangler.backup.toml`** - Backup worker
 
-### ❌ BROKEN Configurations:
-- **`wrangler.platform.toml`** - Points to non-existent `api/platform-worker.js`
+### 🗑️ REMOVED Configurations:
+- **`wrangler.platform.toml`** - ~~Deleted (was pointing to non-existent file)~~
 
 ### 📦 Package.json Scripts Status:
-- **✅ WORKING**: `deploy:legacy`, `deploy:worker`, `deploy:pages`, `build`
-- **❌ BROKEN**: `deploy`, `deploy:platform-worker` (use platform.toml)
+- **✅ ALL WORKING**: `deploy`, `deploy:worker`, `deploy:pages`, `build`, `analyze`
 
 ## Architecture Components
 
@@ -97,9 +96,9 @@ In the Cloudflare Pages dashboard, set these environment variables:
 
 ## Deployment Process
 
-### 🚨 CRITICAL: Use ONLY These Commands
+### 🎯 SIMPLIFIED: All Commands Now Work
 
-**DO NOT use `npm run deploy` - it's broken and uses the faulty platform.toml config.**
+**All npm deployment commands have been cleaned up and now work correctly.**
 
 ### Step 1: Deploy the Routing Worker
 
@@ -114,42 +113,33 @@ This deploys the worker with routes:
 - `r8r.one/*`
 - `*.r8r.one/*`
 
-### Step 2: Deploy the API Worker
+### Step 2: Deploy Everything Else
 
-Deploy the backend API worker using the WORKING config:
+Deploy API worker and frontend with a single command:
 
 ```bash
-# ✅ CORRECT: Deploy API worker (uses wrangler.worker.toml)
+# ✅ SIMPLE: Deploy everything (API + Frontend)
+npm run deploy
+```
+
+Or deploy components individually:
+```bash
+# Deploy API worker only
 npm run deploy:worker
-```
 
-Or explicitly:
-```bash
-npx wrangler deploy --config wrangler.worker.toml
-```
-
-### Step 3: Deploy the Frontend
-
-Build and deploy the Next.js application:
-
-```bash
-# ✅ CORRECT: Build first
+# Build and deploy frontend only
 npm run build
-
-# ✅ CORRECT: Deploy to Pages
 npm run deploy:pages
 ```
 
-Or explicitly:
-```bash
-npm run build
-npx wrangler pages deploy out --project-name r8r-platform
-```
-
-### 🎯 Complete Working Deployment Sequence
+### 🎯 Complete Deployment Sequence
 
 ```bash
-# Complete deployment (use this exact sequence)
+# Option 1: Simple deployment (recommended)
+CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID npx wrangler deploy --config wrangler.routing.toml --env production
+npm run deploy
+
+# Option 2: Step-by-step deployment
 CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID npx wrangler deploy --config wrangler.routing.toml --env production
 npm run deploy:worker
 npm run build
@@ -175,28 +165,20 @@ Proxy: Enabled (orange cloud)
 
 ## Deployment Commands Reference
 
-### ✅ WORKING Individual Component Deployment
+### ✅ ALL WORKING Deployment Commands
 
 ```bash
-# Deploy routing worker only
+# Complete deployment
+npm run deploy                    # Deploy API worker + frontend
+
+# Individual components
+npm run deploy:worker            # Deploy API worker only
+npm run deploy:pages             # Deploy frontend only
+npm run build                    # Build frontend only
+
+# Manual deployments
 CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID npx wrangler deploy --config wrangler.routing.toml --env production
-
-# Deploy API worker only  
-npm run deploy:worker
-
-# Deploy frontend only
-npm run build && npm run deploy:pages
-
-# Deploy backup worker
 cd backup-worker && npx wrangler deploy --config wrangler.backup.toml
-```
-
-### ❌ BROKEN Commands (DO NOT USE)
-```bash
-# These commands are BROKEN - avoid them:
-npm run deploy                    # Uses broken platform.toml
-npm run deploy:platform-worker    # Uses broken platform.toml  
-npm run deploy:app                # Uses wrong build directory
 ```
 
 ### 🎯 Recommended Full Deployment

@@ -16,33 +16,28 @@ npm run analyze       # Build with bundle analyzer for performance analysis
 
 **ALWAYS read `docs/DEPLOYMENT.md` before ANY deployment to avoid configuration errors.**
 
-### ✅ WORKING Deployment Commands
+### ✅ CLEAN Deployment Commands
 ```bash
-# API Worker (uses working wrangler.worker.toml)
-npm run deploy:worker
+# Complete deployment (all components)
+npm run deploy
 
-# Frontend (builds to out/ directory)
-npm run build
-npm run deploy:pages
+# Individual components
+npm run deploy:worker    # API Worker
+npm run deploy:pages     # Frontend Pages
+npm run build           # Build frontend only
 
-# Routing Worker (requires CLOUDFLARE_ACCOUNT_ID in .env.local)
+# Routing Worker (manual - for *.r8r.one subdomain support)
 CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID npx wrangler deploy --config wrangler.routing.toml --env production
-```
-
-### ❌ BROKEN Commands (DO NOT USE)
-```bash
-npm run deploy                # Uses broken wrangler.platform.toml
-npm run deploy:platform-worker # Uses broken wrangler.platform.toml
-npm run deploy:app            # Uses wrong directory (dist/ vs out/)
 ```
 
 ### Complete Deployment Sequence
 ```bash
-# Use this exact sequence (see docs/DEPLOYMENT.md for full details):
+# Option 1: Use single command (recommended)
+npm run deploy
+
+# Option 2: Manual sequence
 CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID npx wrangler deploy --config wrangler.routing.toml --env production
-npm run deploy:worker
-npm run build  
-npm run deploy:pages
+npm run deploy
 ```
 
 ## Project Architecture

@@ -22,14 +22,11 @@
     "dev": "next dev",
     "lint": "eslint . --ignore-pattern '.next/**' --ignore-pattern 'dist/**' --ignore-pattern 'out/**' --ignore-pattern 'deploy/**' --ignore-pattern '.vercel/**' --ignore-pattern '.wrangler/**'",
     "build": "next build",
-    "build:cloudflare": "npx @cloudflare/next-on-pages",
-    "deploy": "npm run deploy:platform-worker && npm run build && npm run deploy:pages",
+    "analyze": "ANALYZE=true next build",
+    "deploy": "npm run deploy:worker && npm run build && npm run deploy:pages",
     "deploy:pages": "npx wrangler pages deploy out --project-name r8r-platform",
-    "deploy:platform-worker": "npx wrangler deploy --config wrangler.platform.toml",
-    "deploy:legacy": "npm run deploy:worker && npm run deploy:app",
-    "deploy:app": "npm run build && npx wrangler pages deploy dist --commit-dirty=true",
     "deploy:worker": "wrangler deploy --config wrangler.worker.toml",
-    "analyze": "ANALYZE=true next build"
+    "deploy:full": "npm run deploy:worker && npm run build && npm run deploy:pages"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.1",
