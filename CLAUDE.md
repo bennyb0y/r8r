@@ -12,17 +12,37 @@ npm run lint          # Run ESLint for code quality
 npm run analyze       # Build with bundle analyzer for performance analysis
 ```
 
-### Deployment
+### 🚨 CRITICAL: Deployment Reference
+
+**ALWAYS read `docs/DEPLOYMENT.md` before ANY deployment to avoid configuration errors.**
+
+### ✅ WORKING Deployment Commands
 ```bash
-npm run deploy:app    # Deploy frontend to Cloudflare Pages
-npm run deploy:worker # Deploy API worker to Cloudflare Workers
-npm run deploy        # Deploy both worker and app (runs deploy:worker then deploy:app)
+# API Worker (uses working wrangler.worker.toml)
+npm run deploy:worker
+
+# Frontend (builds to out/ directory)
+npm run build
+npm run deploy:pages
+
+# Routing Worker (requires CLOUDFLARE_ACCOUNT_ID in .env.local)
+CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID npx wrangler deploy --config wrangler.routing.toml --env production
 ```
 
-### Routing Worker Deployment
+### ❌ BROKEN Commands (DO NOT USE)
 ```bash
-# Deploy wildcard routing worker (for *.r8r.one support)
-CLOUDFLARE_ACCOUNT_ID=4467ef47f4344bb87ee9fc681c6ca144 npx wrangler deploy --config wrangler.routing.toml --env production
+npm run deploy                # Uses broken wrangler.platform.toml
+npm run deploy:platform-worker # Uses broken wrangler.platform.toml
+npm run deploy:app            # Uses wrong directory (dist/ vs out/)
+```
+
+### Complete Deployment Sequence
+```bash
+# Use this exact sequence (see docs/DEPLOYMENT.md for full details):
+CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID npx wrangler deploy --config wrangler.routing.toml --env production
+npm run deploy:worker
+npm run build  
+npm run deploy:pages
 ```
 
 ## Project Architecture
